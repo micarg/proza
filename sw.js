@@ -1,5 +1,5 @@
 // Proza offline cache: app files and the libraries it loads; the page itself refreshes from the network when online
-const CACHE='proza-v1';
+const CACHE='proza-v2';
 const CORE=['./','index.html','manifest.webmanifest','fonts.js','dict.js','icon-180.png','icon-192.png','icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))).then(()=>self.skipWaiting()));});

@@ -2,7 +2,7 @@
 <html lang="el">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Proza</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -33,6 +33,9 @@
 body.paperlight{--p-bg:#ffffff; --p-ink:#000000; --p-muted:#8a8a8e; --p-line:rgba(0,0,0,.13); --p-hl:rgba(0,0,0,.045); --p-label:#6e6e73; --p-edge:rgba(255,255,255,0)}
 *{box-sizing:border-box}
 html,body{height:100%}
+html{overflow-x:hidden;overscroll-behavior:none}
+body{overflow-x:clip;max-width:100vw;overscroll-behavior:none;touch-action:pan-y}
+.shell,.deskarea,.top{max-width:100vw}
 body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;margin:0;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -53,6 +56,9 @@ button:active{transform:scale(.97)}
 .series{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #epTitle{font:inherit;font-weight:700;font-size:17px;letter-spacing:-.02em;border:0;background:transparent;color:var(--ink);padding:0;min-width:0;width:100%}
 #epTitle:focus{outline:none}
+.top{overflow:hidden}
+.focusico{display:none}
+@media (max-width:520px){.meta{font-size:11px;max-width:84px;overflow:hidden}.meta span{overflow:hidden;text-overflow:ellipsis}#focusBtn{width:38px;padding:0}#focusBtn .lbl{display:none}.focusico{display:block}.urbtn{width:30px}.top{gap:7px}}
 .meta{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;line-height:1.35}
 .save{display:block}
 .save.warn{color:var(--danger)}
@@ -187,7 +193,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 
 .vcount{font-variant-numeric:tabular-nums;margin-left:4px;opacity:.8}
 .vform{display:flex;gap:6px}
-.vform input{flex:1;min-width:0;font:inherit;font-size:15px;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink)}
+.vform input{flex:1;min-width:0;font:inherit;font-size:16px;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink)}
 .vform input:focus{outline:none;border-color:rgba(255,255,255,.35)}
 .vform button{border:0;border-radius:12px;padding:0 14px;background:var(--sel-bg);color:var(--sel-ink);font-weight:600;font-size:14px}
 .vlist{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow-y:auto}
@@ -209,7 +215,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
   .drawer.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.6)}
   .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:14}
   .page{padding:24px 18px 40px 18px;min-height:60vh;border-radius:18px}
-  #script{font-size:15px}
+  #script{font-size:16px}
   .b.character{margin-left:28%;width:70%}
   .b.dialogue{margin-left:10%;width:80%}
   .b.paren{margin-left:20%;width:60%}
@@ -233,7 +239,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
     <span class="series" id="seriesLabel">Η σειρά μου</span>
     <input id="epTitle" aria-label="Τίτλος επεισοδίου" value="Επεισόδιο 1">
   </div>
-  <button class="iconbtn" id="focusBtn" title="Λειτουργία εστίασης">Εστίαση</button>
+  <button class="iconbtn" id="focusBtn" title="Λειτουργία εστίασης" aria-label="Εστίαση"><svg class="focusico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="lbl">Εστίαση</span></button>
   <div class="meta"><span id="pages">~1 σελ.</span><span class="save" id="saveState">Φόρτωση…</span></div>
 </header>
 
@@ -809,7 +815,7 @@ $('bkConfirm').addEventListener('click',e=>{
   if(!added){toast('Όλα τα επεισόδια του αντιγράφου υπάρχουν ήδη');return;}
   seriesDirty=true;S.cur=firstId;markDirty(null);renderScript();closeDrawer();toast('Επανήλθαν '+added+' επεισόδια');});
 /* keep the top bar inside the visible area when the on-screen keyboard pans the page */
-if(window.visualViewport){const vv=visualViewport;const f=()=>{const off=Math.max(0,vv.offsetTop);$('bar').style.transform=off?`translateY(${off}px)`:'';};vv.addEventListener('resize',f);vv.addEventListener('scroll',f);}
+if(window.visualViewport){const vv=visualViewport;const f=()=>{const kbd=vv.height<innerHeight*0.85;const off=kbd?Math.max(0,vv.offsetTop):0;$('bar').style.transform=off?`translateY(${off}px)`:'';};vv.addEventListener('resize',f);vv.addEventListener('scroll',f);}
 let edT=null;
 script.addEventListener('focusin',()=>{clearTimeout(edT);document.body.classList.add('editing');});
 script.addEventListener('focusout',()=>{clearTimeout(edT);edT=setTimeout(()=>{if(!script.contains(document.activeElement))document.body.classList.remove('editing');},150);});
