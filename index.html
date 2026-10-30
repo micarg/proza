@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Proza</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Proza">
+<meta name="theme-color" content="#0b0b0d">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>:root{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}html{-webkit-text-size-adjust:100%}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cousine:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: an iPhone-style writing app — translucent glass nav bar on top, a glass sheet for episodes/scenes/characters, the script page in the middle, a floating glass format capsule at the bottom. Committed dark chrome; the page itself is black or white. */
+:root{
+  --bg:#0b0b0d; --ink:#f5f5f7; --muted:#8e8e93; --line:rgba(255,255,255,.10);
+  --glass:rgba(40,40,44,.58); --glass-strong:rgba(26,26,30,.78); --fill:rgba(118,118,128,.20); --fill-2:rgba(118,118,128,.12);
+  --stroke:rgba(255,255,255,.14); --hi:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(0,0,0,.28);
+  --sel-bg:#f5f5f7; --sel-ink:#000; --danger:#ff453a;
+  --p-bg:#000000; --p-ink:#ececec; --p-muted:#77777c; --p-line:rgba(255,255,255,.13); --p-hl:rgba(255,255,255,.06); --p-label:#a1a1a6; --p-edge:rgba(255,255,255,.08);
+  --script:"Cousine","Courier New",Courier,monospace;
+  --ui:-apple-system,"SF Pro Text",BlinkMacSystemFont,system-ui,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  --blur:saturate(180%) blur(22px);
+  color-scheme:dark;
+}
+body.paperlight{--p-bg:#ffffff; --p-ink:#000000; --p-muted:#8a8a8e; --p-line:rgba(0,0,0,.13); --p-hl:rgba(0,0,0,.045); --p-label:#6e6e73; --p-edge:rgba(255,255,255,0)}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;margin:0;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible{outline:2px solid rgba(255,255,255,.7);outline-offset:2px}
+.b:focus-visible,.covertitle:focus-visible{outline:none}
+button:active{transform:scale(.97)}
+
+/* glass primitives */
+.glassbtn,.iconbtn{border:1px solid var(--stroke);background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);box-shadow:var(--hi),0 4px 14px rgba(0,0,0,.25);color:var(--ink)}
+.iconbtn{border-radius:999px;height:38px;min-width:38px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:600;transition:background .15s,transform .1s}
+.iconbtn:hover{background:rgba(70,70,76,.6)}
+#menuBtn{padding:0;width:38px;font-size:17px}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-block:9px;
+  display:flex;align-items:center;gap:10px;border-bottom:.5px solid var(--line)}
+.titles{flex:1;min-width:0;display:flex;flex-direction:column}
+.series{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#epTitle{font:inherit;font-weight:700;font-size:17px;letter-spacing:-.02em;border:0;background:transparent;color:var(--ink);padding:0;min-width:0;width:100%}
+#epTitle:focus{outline:none}
+.meta{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;line-height:1.35}
+.save{display:block}
+.save.warn{color:var(--danger)}
+
+.shell{display:grid;grid-template-columns:290px minmax(0,1fr);min-height:calc(100% - 57px)}
+.drawer{padding:16px 14px;display:flex;flex-direction:column;gap:22px;overflow-y:auto;max-height:calc(100vh - 57px);position:sticky;top:57px;
+  background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border-right:.5px solid var(--line)}
+.drawer h3{margin:0 0 7px 12px;font-size:12px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.list{display:flex;flex-direction:column;background:var(--fill-2);border-radius:14px;padding:4px;border:.5px solid var(--line)}
+.list:empty{display:none}
+.list>.help{padding:10px 12px}
+.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-radius:10px;padding:10px 10px;font-size:15px;line-height:1.25;color:var(--ink)}
+.item:hover{background:var(--fill)}
+.item.on{background:rgba(255,255,255,.14);font-weight:600;box-shadow:var(--hi)}
+.item .n{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:20px}
+.item .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .c{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.add{border:0;background:var(--fill);border-radius:12px;padding:11px 12px;font-size:15px;font-weight:500;color:var(--ink);text-align:center;box-shadow:var(--hi)}
+.add:hover{background:rgba(118,118,128,.3)}
+#seriesTitle{font:inherit;font-size:16px;font-weight:600;border:.5px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--fill-2);color:var(--ink);width:100%}
+#seriesTitle:focus{outline:none;border-color:rgba(255,255,255,.35)}
+.tools{display:flex;flex-direction:column;gap:7px}
+.tools .iconbtn{justify-content:flex-start;width:100%;border-radius:14px;height:46px;font-weight:500;box-shadow:var(--hi)}
+.danger{color:var(--danger)!important}
+.confirm{display:flex;gap:8px;align-items:center;font-size:14px;flex-wrap:wrap;padding:6px 4px}
+.confirm button{border:.5px solid var(--stroke);background:var(--fill);border-radius:999px;padding:7px 14px;box-shadow:var(--hi)}
+.confirm .yes{background:var(--danger);color:#fff;border-color:transparent}
+.help{font-size:13px;color:var(--muted);line-height:1.55;padding:0 6px}
+.help b{color:var(--ink);font-weight:600}
+.help kbd{font-family:var(--ui);font-size:11px;border:.5px solid var(--stroke);border-radius:5px;padding:0 5px;background:var(--fill)}
+.scrim{display:none}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:.5px solid var(--line);background:var(--fill-2);border-radius:14px;padding:11px 12px;font-size:15px;font-weight:500;text-align:left;color:var(--ink)}
+.switch .knob{flex:0 0 auto;width:51px;height:31px;border-radius:999px;background:rgba(120,120,128,.32);position:relative;transition:background .2s}
+.switch .knob::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.3),0 1px 1px rgba(0,0,0,.16);transition:left .2s}
+.switch[aria-checked=true] .knob{background:#f5f5f7}
+.switch[aria-checked=true] .knob::after{left:22px;background:#1c1c1e}
+
+/* page */
+.deskarea{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:96px 65vh;min-width:0}
+.page{max-width:8.5in;margin:0 auto;background:var(--p-bg);color:var(--p-ink);border:1px solid var(--p-edge);box-shadow:0 20px 50px rgba(0,0,0,.45);border-radius:14px;padding:1in 1in 1in 1.5in;min-height:11in;position:relative}
+.example{font-family:var(--ui);font-size:14px;background:var(--p-hl);color:var(--p-ink);border:.5px solid var(--p-line);border-radius:14px;padding:12px 14px;margin-bottom:24px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.bkbtns{display:flex;gap:6px}
+.example button.ghost{background:transparent;color:var(--p-muted)}
+.example button{border:0;background:var(--p-ink);color:var(--p-bg);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:600}
+#script{font-family:var(--script);font-size:12pt;line-height:1.2;counter-reset:scene}
+.b{outline:none;white-space:pre-wrap;word-wrap:break-word;min-height:1.2em;position:relative;border-radius:3px;caret-color:var(--p-ink)}
+.b:focus{background:var(--p-hl)}
+.b:empty::before{content:attr(data-ph);color:var(--p-muted);opacity:.7;font-style:italic;text-transform:none;pointer-events:none}
+.b.scene{text-transform:uppercase;font-weight:700;margin-top:3.6em;counter-increment:scene}
+.b.scene::after{content:"ΣΚΗΝΗ " counter(scene);position:absolute;left:0;top:-1.2em;color:var(--p-label);font-weight:700;letter-spacing:.04em;font-style:normal;pointer-events:none}
+#script>.b.scene:first-child{margin-top:1.2em}
+.b.action{margin-top:1.2em}
+.b.character{text-transform:uppercase;margin-top:1.2em;margin-left:33%;width:60%}
+.b.dialogue{margin-left:17%;width:58%}
+.b.paren{margin-left:25%;width:40%}
+.b.paren:not(:empty)::before{content:"("}
+.b.paren:not(:empty)::after{content:")"}
+.b.transition{text-transform:uppercase;text-align:right;margin-top:1.2em}
+#script>.b:first-child{margin-top:0}
+.loading{font-family:var(--ui);color:var(--p-muted);font-size:14px;padding:20px 0}
+.page.cover{min-height:auto;aspect-ratio:8.5/11;max-height:11in;display:flex;align-items:center;justify-content:center;margin-bottom:28px;padding:1in}
+.covertitle{font-family:var(--script);font-size:14pt;font-weight:700;text-transform:uppercase;text-align:center;white-space:pre-wrap;outline:none;min-width:8ch;max-width:100%;line-height:1.5;padding:4px 8px;border-radius:6px;caret-color:var(--p-ink)}
+.covertitle:focus{background:var(--p-hl)}
+.covertitle:empty::before{content:attr(data-ph);color:var(--p-muted);opacity:.7}
+#pgmarks{position:absolute;inset:0;pointer-events:none}
+.pgmark{position:absolute;left:0;right:0;height:0;border-top:1px dashed var(--p-line)}
+.pgmark span,.pgfirst{position:absolute;right:.75in;font-family:var(--script);font-size:12pt;color:var(--p-muted)}
+.pgmark span{top:10px}
+.pgfirst{top:.5in}
+
+/* floating glass format capsule */
+.bar{position:fixed;left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px));z-index:6;
+  max-width:760px;margin:0 auto;background:var(--glass);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);border-radius:26px;
+  box-shadow:var(--hi),0 12px 40px rgba(0,0,0,.5);padding:7px;display:flex;flex-direction:column;gap:6px;transition:transform .12s}
+.chips,.types{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.chips::before,.chips::after,.types::before,.types::after{content:"";margin:auto}
+.chips::-webkit-scrollbar,.types::-webkit-scrollbar{display:none}
+.chips:empty{display:none}
+.chip{flex:0 0 auto;border:.5px solid var(--stroke);background:var(--fill);border-radius:999px;padding:7px 13px;font-family:var(--script);font-size:13px;color:var(--ink);box-shadow:var(--hi)}
+.chip:hover{background:rgba(118,118,128,.32)}
+.type{flex:0 0 auto;border:0;background:transparent;border-radius:999px;padding:9px 14px;font-size:14px;font-weight:600;color:var(--muted);transition:background .15s,color .15s}
+.type:hover{color:var(--ink)}
+.type.on{background:var(--sel-bg);color:var(--sel-ink);box-shadow:0 2px 8px rgba(0,0,0,.35)}
+.type.newscene{color:var(--ink);background:var(--fill);box-shadow:var(--hi)}
+.type kbd{font-family:var(--ui);font-size:10px;opacity:.55;margin-left:4px}
+.type.exitfocus{display:none}
+.toast{position:fixed;left:50%;top:calc(170px + env(safe-area-inset-top,0px));transform:translateX(-50%);background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);box-shadow:var(--hi),0 8px 24px rgba(0,0,0,.4);color:var(--ink);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:500;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+.charrow{display:flex;flex-direction:column}
+.charrow>.item .tx{font-family:var(--script);font-size:14px}
+.charrow.open>.item{background:var(--fill)}
+.charscenes{display:flex;flex-direction:column;gap:1px;padding:4px 0 8px 12px;border-left:2px solid var(--line);margin-left:16px}
+.charscenes .item{font-size:14px;padding:8px 10px}
+.charscenes .ep{font-size:12px;color:var(--muted);font-weight:600;padding:8px 10px 2px}
+.charscenes .tag{font-size:12px;color:var(--muted);font-style:italic}
+.charscenes .item.here .tx{font-weight:600}
+
+/* focus */
+.focusExit{display:none}
+body.focus{background:var(--p-bg)}
+body.focus::before{background:var(--p-bg);backdrop-filter:none;-webkit-backdrop-filter:none}
+body.focus .top,body.focus .drawer,body.focus .scrim,body.focus .example,body.focus .toast,body.focus .page.cover,body.focus #pgmarks{display:none!important}
+body.focus .bar,body.focus .focusExit{display:none!important}
+/* focus mode: one near-invisible control, a small sheet only on demand */
+.fmenu{display:none}
+body.focus .fmenu{display:flex;align-items:flex-start;gap:2px;position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));z-index:20}
+.fbtn{border:0;background:transparent;color:var(--p-muted);font-size:12.5px;font-weight:500;height:30px;padding:0 10px;border-radius:999px;opacity:.5;display:inline-flex;align-items:center;gap:5px;letter-spacing:0;transition:opacity .2s,background .2s}
+.fbtn:hover,.fbtn:focus-visible,.fbtn[aria-expanded=true]{opacity:1;background:var(--p-hl)}
+.fbtn.fur{padding:0 7px}
+.fbtn:disabled{opacity:.15}
+.urgroup{display:flex;gap:2px;padding:2px;border-radius:999px;background:var(--fill-2);border:.5px solid var(--line)}
+.urbtn{width:34px;height:34px;border:0;border-radius:999px;background:transparent;color:var(--ink);display:grid;place-items:center;opacity:.75;transition:opacity .15s,background .15s}
+.urbtn:hover{background:var(--fill);opacity:1}
+.urbtn:disabled{opacity:.22}
+.fbtn .dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.7}
+.fpanel{position:absolute;right:0;top:36px;min-width:210px;padding:6px;display:flex;flex-direction:column;gap:2px;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);border-radius:18px;box-shadow:var(--hi),0 16px 40px rgba(0,0,0,.45)}
+.fpanel button{border:0;background:transparent;color:var(--ink);text-align:left;font-size:15px;font-weight:500;padding:10px 12px;border-radius:12px}
+.fpanel button:hover{background:var(--fill)}
+.fpanel button.on{background:var(--sel-bg);color:var(--sel-ink);font-weight:600}
+.fpanel hr{border:0;border-top:.5px solid var(--line);margin:4px 6px}
+.fpanel .fexit{color:var(--muted)}
+body.focus .shell{grid-template-columns:minmax(0,1fr)}
+body.focus .page{box-shadow:none;border-color:transparent}
+body.focus .deskarea{padding-block:88px 65vh}
+body.focus .b:focus{background:transparent}
+body.focus .page{max-width:9in}
+@media (max-width:860px){body.focus .page{padding:12px 4px 40px}body.focus #script{font-size:17px;line-height:1.45}body.focus .deskarea{padding-block:52px 65vh;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}}
+body.focus .b.scene::after{opacity:.7}
+body.focus .focusExit{display:flex;position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:20;opacity:.35;height:34px;padding:0 14px;align-items:center;font-size:13px;font-weight:600;border-radius:999px;transition:opacity .2s}
+body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
+
+.vcount{font-variant-numeric:tabular-nums;margin-left:4px;opacity:.8}
+.vform{display:flex;gap:6px}
+.vform input{flex:1;min-width:0;font:inherit;font-size:15px;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink)}
+.vform input:focus{outline:none;border-color:rgba(255,255,255,.35)}
+.vform button{border:0;border-radius:12px;padding:0 14px;background:var(--sel-bg);color:var(--sel-ink);font-weight:600;font-size:14px}
+.vlist{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow-y:auto}
+.vchip{display:inline-flex;align-items:center;gap:4px;background:var(--fill);border:.5px solid var(--line);border-radius:999px;padding:4px 4px 4px 11px;font-size:14px}
+.vchip button{border:0;background:transparent;color:var(--muted);width:22px;height:22px;border-radius:50%;font-size:11px;padding:0}
+.vchip button:hover{background:var(--fill);color:var(--ink)}
+.tbubble{position:fixed;z-index:30;display:flex;align-items:center;gap:4px;max-width:calc(100vw - 16px);overflow-x:auto;scrollbar-width:none;padding:5px;border-radius:999px;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);box-shadow:var(--hi),0 10px 30px rgba(0,0,0,.45);font-family:var(--ui)}
+.tbubble::-webkit-scrollbar{display:none}
+.tbubble button{flex:0 0 auto;border:0;border-radius:999px;font-size:15px;padding:7px 12px;white-space:nowrap}
+.tbubble .topt{background:var(--sel-bg);color:var(--sel-ink);font-weight:600}
+.tbubble .topt+.topt{background:var(--fill);color:var(--ink);font-weight:500}
+.tbubble .tkeep{background:transparent;color:var(--muted);font-size:13px}
+.tbubble .tclose{background:transparent;color:var(--muted);font-size:12px;padding:7px 9px}
+.tbubble .tload{color:var(--muted);font-size:14px;padding:6px 12px}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .drawer{position:fixed;top:0;bottom:0;left:0;width:min(330px,88vw);max-height:none;z-index:15;transform:translateX(-105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);border-right:.5px solid var(--stroke);border-radius:0 26px 26px 0;
+    padding-top:calc(18px + env(safe-area-inset-top,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+  .drawer.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.6)}
+  .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:14}
+  .page{padding:24px 18px 40px 18px;min-height:60vh;border-radius:18px}
+  #script{font-size:15px}
+  .b.character{margin-left:28%;width:70%}
+  .b.dialogue{margin-left:10%;width:80%}
+  .b.paren{margin-left:20%;width:60%}
+  .deskarea{padding-block:80px 65vh}
+  .type kbd{display:none}
+  .page.cover{padding:24px 16px;aspect-ratio:auto;min-height:45vh;margin-bottom:14px}
+  .pgmark span{right:12px;top:4px;font-size:12px}.pgfirst{right:12px;top:6px;font-size:12px}
+}
+@media (min-width:861px){#menuBtn{display:none}body:not(.focus) .bar{left:306px}}
+@media (prefers-reduced-motion:reduce){.drawer,.bar,.toast,.switch .knob,.switch .knob::after{transition:none}}
+.savesheet{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:8px;max-width:calc(100vw - 24px);padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);box-shadow:var(--hi),0 12px 36px rgba(0,0,0,.5);font-size:14px}
+.savesheet span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.savesheet button{flex:0 0 auto;border:0;border-radius:999px;padding:9px 16px;font-weight:600;font-size:15px}
+.savesheet .ok{background:var(--sel-bg);color:var(--sel-ink)}.savesheet .no{background:transparent;color:var(--muted);padding:9px 10px}
+</style>
+
+<header class="top">
+  <button class="iconbtn" id="menuBtn" aria-label="Επεισόδια και σκηνές">☰</button>
+  <div class="urgroup"><button class="urbtn" id="undoBtn" type="button" aria-label="Αναίρεση" title="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="urbtn" id="redoBtn" type="button" aria-label="Επανάληψη" title="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+  <div class="titles">
+    <span class="series" id="seriesLabel">Η σειρά μου</span>
+    <input id="epTitle" aria-label="Τίτλος επεισοδίου" value="Επεισόδιο 1">
+  </div>
+  <button class="iconbtn" id="focusBtn" title="Λειτουργία εστίασης">Εστίαση</button>
+  <div class="meta"><span id="pages">~1 σελ.</span><span class="save" id="saveState">Φόρτωση…</span></div>
+</header>
+
+<div class="shell">
+  <aside class="drawer" id="drawer">
+    <div>
+      <h3><label for="seriesTitle">Σειρά</label></h3>
+      <input id="seriesTitle" value="Η σειρά μου">
+    </div>
+    <div>
+      <h3>Επεισόδια</h3>
+      <div class="list" id="epList"></div>
+      <button class="add" id="addEp" style="margin-top:6px;width:100%">+ Νέο επεισόδιο</button>
+    </div>
+    <div>
+      <h3>Σκηνές</h3>
+      <div class="list" id="sceneList"></div>
+      <button class="add" id="addScene" style="margin-top:6px;width:100%">+ Νέα σκηνή</button>
+    </div>
+    <div>
+      <h3>Χαρακτήρες σειράς</h3>
+      <div class="list" id="charList"></div>
+    </div>
+    <div class="tools">
+      <h3>Εμφάνιση</h3>
+      <button class="switch" id="paperBtn" role="switch" aria-checked="false" type="button"><span>Λευκή σελίδα, μαύρα γράμματα</span><span class="knob" aria-hidden="true"></span></button>
+      <button class="switch" id="acBtn" role="switch" aria-checked="true" type="button"><span>Αυτόματη διόρθωση στη δράση</span><span class="knob" aria-hidden="true"></span></button>
+      <p class="help">Διορθώνει και βάζει τόνους όταν πατάς κενό. Αν μια διόρθωση δεν σου αρέσει, πάτα αμέσως διαγραφή για να επανέλθει η λέξη σου, και δεν θα την ξαναλλάξει.</p>
+    </div>
+    <div class="tools">
+      <h3>Το λεξιλόγιό μου <span id="vocabCount" class="vcount"></span></h3>
+      <form id="vocabForm" class="vform"><input id="vocabInput" placeholder="Πρόσθεσε λέξη…" autocomplete="off" autocapitalize="none" aria-label="Νέα λέξη"><button type="submit">Προσθήκη</button></form>
+      <div class="vlist" id="vocabList"></div>
+    </div>
+    <div class="tools">
+      <h3>Αρχείο</h3>
+      <button class="iconbtn" id="expTxt">Λήψη κειμένου (Fountain .txt)</button>
+      <button class="iconbtn" id="expPdf">Λήψη PDF</button>
+      <button class="iconbtn" id="expDocx">Λήψη Word (.docx)</button>
+      <button class="iconbtn" id="bkBtn">Αντίγραφο ασφαλείας όλης της σειράς</button>
+      <label class="iconbtn" for="bkFile" style="cursor:pointer">Επαναφορά από αντίγραφο</label>
+      <input type="file" id="bkFile" accept=".json,application/json" hidden>
+      <div id="bkConfirm"></div>
+      <p class="help" id="bkInfo"></p>
+      <button class="iconbtn" id="copyTxt">Αντιγραφή όλου του σεναρίου</button>
+      <label class="iconbtn" for="importFile" style="cursor:pointer">Εισαγωγή από .txt / .fountain</label>
+      <input type="file" id="importFile" accept=".txt,.fountain,text/plain" hidden>
+      <div id="delWrap"><button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button></div>
+    </div>
+    <div class="help">
+      <p><b>Τρία κενά</b> βάζουν κόμμα.</p>
+      <p><b>Enter</b> πηγαίνει στο επόμενο: Σκηνή → Δράση → Χαρακτήρας → Διάλογος → Δράση → … <b>Διπλό Enter</b> ξεκινά νέα σκηνή.</p>
+      <p>Γράψε <b>ΕΣΩΤ.</b> ή <b>ΕΞΩΤ.</b> και η γραμμή γίνεται σκηνή. Γράψε <b>(</b> στην αρχή διαλόγου για παρένθεση.</p>
+      <p>Στον υπολογιστή: <kbd>Tab</kbd> αλλάζει τύπο, <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>6</kbd> για κάθε τύπο.</p>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="deskarea">
+    <article class="page cover" lang="el" aria-label="Σελίδα τίτλου">
+      <div id="coverTitle" class="covertitle" contenteditable="true" spellcheck="false" data-ph="ΤΙΤΛΟΣ"></div>
+    </article>
+    <article class="page" id="scriptPage" lang="el">
+      <div id="pgmarks" aria-hidden="true"></div>
+      <div class="example" id="exampleNote" hidden><span>Αυτή είναι μια σκηνή-παράδειγμα για να δεις πώς δουλεύει.</span><button id="clearExample">Καθάρισε και ξεκίνα</button></div>
+      <div class="example" id="bkNote" hidden><span id="bkNoteText">Έχεις αλλαγές χωρίς αντίγραφο ασφαλείας.</span><span class="bkbtns"><button id="bkLater" class="ghost">Αργότερα</button><button id="bkNow">Αντίγραφο τώρα</button></span></div>
+      <div id="script"><div class="loading">Φόρτωση του σεναρίου σου…</div></div>
+    </article>
+  </main>
+</div>
+
+<nav class="bar" id="bar" aria-label="Μορφή γραμμής">
+  <div class="chips" id="chips"></div>
+  <div class="types" id="types"></div>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+<button class="focusExit glassbtn" id="focusExit" type="button">Έξοδος εστίασης</button>
+<div class="fmenu" id="fmenu">
+  <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
+  <div class="fpanel" id="fPanel" hidden></div>
+</div>
+
+<script>
+(function(){
+const TYPES=[
+  {k:'scene',l:'Σκηνή',ph:'ΕΣΩΤ. ΤΟΠΟΘΕΣΙΑ - ΜΕΡΑ'},
+  {k:'action',l:'Δράση',ph:'Τι βλέπουμε…'},
+  {k:'character',l:'Χαρακτήρας',ph:'ΟΝΟΜΑ'},
+  {k:'dialogue',l:'Διάλογος',ph:'Τι λέει…'},
+  {k:'paren',l:'(Παρένθεση)',ph:'(σιγανά)'},
+  {k:'transition',l:'Μετάβαση',ph:'ΚΟΨΙΜΟ ΣΕ:'}
+];
+const TK=TYPES.map(t=>t.k), PH=Object.fromEntries(TYPES.map(t=>[t.k,t.ph]));
+/* Enter: scene → action → character → dialogue → action → …; Enter on an empty line (double Enter) starts a new scene */
+const NEXT={scene:'action',action:'character',character:'dialogue',paren:'dialogue',dialogue:'action',transition:'scene'};
+const EMPTY_ENTER={action:'scene',character:'scene',dialogue:'scene',paren:'scene',transition:'scene',scene:'scene'};
+const $=id=>document.getElementById(id);
+const uid=()=>'ep-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const up=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLocaleUpperCase('el').normalize('NFC');
+const SCENE_RE=/^(ΕΣΩΤ|ΕΞΩΤ|ΕΣ\/ΕΞ|ΕΣΩΤ\.?\/ΕΞΩΤ|INT|EXT|INT\.?\/EXT|I\/E|EST)[\.\s]/i;
+
+const SAMPLE=[
+ {t:'scene',x:'ΕΞΩΤ. ΛΙΜΑΝΙ ΛΕΜΕΣΟΥ - ΣΟΥΡΟΥΠΟ'},
+ {t:'action',x:'Ο ήλιος βουλιάζει πίσω από τα φορτηγά πλοία. Η ΕΛΕΝΗ (30s) περπατά βιαστικά στην προβλήτα, με ένα φάκελο σφιγμένο στο στήθος.'},
+ {t:'character',x:'ΑΝΔΡΕΑΣ'},
+ {t:'paren',x:'φωνάζοντας από μακριά'},
+ {t:'dialogue',x:'Ελένη! Περίμενε!'},
+ {t:'action',x:'Εκείνη δεν γυρίζει.'},
+ {t:'transition',x:'ΚΟΨΙΜΟ ΣΕ:'},
+ {t:'scene',x:'ΕΣΩΤ. ΚΑΦΕΝΕΙΟ - ΝΥΧΤΑ'},
+ {t:'action',x:''}
+];
+
+let S={series:'Η σειρά μου',eps:[],cur:null};
+let db=null,userId=null,remote=false,isExample=false;
+const dirty=new Set(); let seriesDirty=false,saveTimer=null,saving=false;
+
+/* ---------- storage ---------- */
+function localSave(){try{localStorage.setItem('scr-v1',JSON.stringify(S))}catch(e){}}
+function localLoad(){try{const s=JSON.parse(localStorage.getItem('scr-v1')||'null');if(s&&Array.isArray(s.eps))return s;}catch(e){}return null;}
+function setSaveState(t,warn){const el=$('saveState');el.textContent=t;el.classList.toggle('warn',!!warn);}
+function markDirty(ep){if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSave();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
+async function flush(){
+  if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(flush,600);return;}
+  if(!remote){setSaveState('Σε αυτή τη συσκευή');return;}
+  saving=true;setSaveState('Αποθήκευση…');
+  try{
+    const col=db.collection('data/users/'+userId);
+    if(seriesDirty){seriesDirty=false;await col.doc('series').set({kind:'series',title:S.series,order:S.eps.map(e=>e.id)});}
+    for(const id of [...dirty]){
+      dirty.delete(id);
+      const ep=S.eps.find(e=>e.id===id);
+      if(!ep){await col.doc(id).delete();continue;}
+      const body={kind:'ep',title:ep.title,cover:ep.cover==null?null:ep.cover,blocks:ep.blocks,updated:ep.updated};
+      if(JSON.stringify(body).length>240000){setSaveState('Πολύ μεγάλο επεισόδιο',true);toast('Το επεισόδιο είναι πολύ μεγάλο για αποθήκευση στον λογαριασμό. Χώρισέ το σε δύο.');continue;}
+      await col.doc(id).set(body);
+    }
+    setSaveState(dirty.size||seriesDirty?'Αλλαγές…':'Αποθηκεύτηκε');
+  }catch(e){
+    setSaveState('Δεν αποθηκεύτηκε',true);
+    if(e&&e.code==='quota_exceeded')toast('Γέμισε ο χώρος αποθήκευσης. Σβήσε κάποιο παλιό επεισόδιο.');
+    else{S.eps.forEach(x=>dirty.add(x.id));seriesDirty=true;setTimeout(flush,4000+Math.random()*2000);}
+  }finally{saving=false;}
+  if(dirty.size||seriesDirty){clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){syncAll();if(dirty.size||seriesDirty)flush();}});
+
+async function boot(){
+  const local=localLoad();
+  let loaded=null;
+  try{
+    if(window.claude&&claude.use){
+      const timeout=new Promise(r=>setTimeout(()=>r('timeout'),10000));
+      const work=(async()=>{
+        const [d,u]=await Promise.all([claude.use('db'),claude.use('user')]);
+        if(!d||!u)return null;
+        const id=await u.id(); if(!id)return null;
+        db=d;userId=id;
+        const snap=await d.collection('data/users/'+id).get();
+        return snap;
+      })();
+      const r=await Promise.race([work,timeout]);
+      if(r==='timeout'){setSaveState('Χωρίς σύνδεση · τοπικά',true);}
+      else if(r){
+        remote=true;
+        let series=null;const eps=[];
+        r.docs.forEach(doc=>{const v=doc.data();if(!v)return;if(v.kind==='vocab'&&Array.isArray(v.words))mergeVocab(v.words,false);if(v.kind==='series')series=v;else if(v.kind==='ep')eps.push({id:doc.id,title:v.title||'Επεισόδιο',cover:typeof v.cover==='string'?v.cover:null,blocks:Array.isArray(v.blocks)?v.blocks.map(b=>({t:TK.includes(b.t)?b.t:'action',x:String(b.x||'')})):[],updated:v.updated||0});});
+        if(eps.length){
+          const order=series&&Array.isArray(series.order)?series.order:[];
+          eps.sort((a,b)=>{const ia=order.indexOf(a.id),ib=order.indexOf(b.id);return (ia<0?1e9:ia)-(ib<0?1e9:ib)||a.updated-b.updated;});
+          loaded={series:series?series.title:'Η σειρά μου',eps,cur:eps[0].id};
+          try{const lc=local&&local.cur;if(lc&&eps.some(e=>e.id===lc))loaded.cur=lc;}catch(e){}
+        }else if(local&&local.eps.length&&!(local.eps.length===1&&local.example)){
+          loaded=local; local.eps.forEach(e=>dirty.add(e.id)); seriesDirty=true;
+        }
+      }
+    }
+  }catch(e){}
+  if(!loaded&&local&&local.eps.length&&!remote)loaded=local;
+  if(loaded){S={series:loaded.series,eps:loaded.eps,cur:loaded.cur||loaded.eps[0].id};}
+  else{
+    const ep={id:uid(),title:'Επεισόδιο 1',blocks:SAMPLE.map(b=>({...b})),updated:Date.now()};
+    S={series:'Η σειρά μου',eps:[ep],cur:ep.id};isExample=true;$('exampleNote').hidden=false;
+  }
+  setSaveState(remote?(dirty.size?'Αλλαγές…':'Αποθηκεύτηκε'):(saveTimerState()));
+  if(dirty.size||seriesDirty)flush();
+  renderAll();
+}
+function saveTimerState(){return $('saveState').classList.contains('warn')?$('saveState').textContent:'Σε αυτή τη συσκευή';}
+
+/* ---------- editor ---------- */
+const script=$('script');
+const ep=()=>S.eps.find(e=>e.id===S.cur);
+function mk(b){const d=document.createElement('div');d.className='b '+b.t;d.dataset.ph=PH[b.t];d.textContent=b.x;
+  try{d.contentEditable='plaintext-only';if(d.contentEditable!=='plaintext-only')d.contentEditable='true';}catch(e){d.contentEditable='true';}
+  applyCorrect(d,b.t);return d;}
+function applyCorrect(d,t){const on=t==='action';d.spellcheck=on;d.setAttribute('autocorrect',on?'on':'off');d.setAttribute('autocapitalize',t==='action'||t==='dialogue'?'sentences':t==='paren'?'none':'characters');d.setAttribute('autocomplete','off');}
+const coverEl=$('coverTitle');
+const coverText=e=>e.cover==null?e.title:e.cover;
+function renderScript(){const e=ep();if(!restoring&&histEp!==S.cur)setTimeout(histReset,0);script.innerHTML='';if(!e.blocks.length)e.blocks.push({t:'scene',x:''});e.blocks.forEach(b=>script.appendChild(mk(b)));coverEl.textContent=coverText(e);updateSide();}
+coverEl.addEventListener('input',()=>{const e=ep();e.cover=coverEl.innerText.replace(/\n+$/,'');markDirty(e);});
+coverEl.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();const f=script.firstElementChild;if(f)place(f,0);}});
+coverEl.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,(ev.clipboardData||window.clipboardData).getData('text/plain'));});
+function idx(el){return Array.prototype.indexOf.call(script.children,el);}
+function cur(){const s=getSelection();if(!s.rangeCount)return null;let n=s.anchorNode;while(n&&n!==script){if(n.parentNode===script)return n;n=n.parentNode;}return null;}
+function caret(el){const s=getSelection();if(!s.rangeCount)return 0;const r=s.getRangeAt(0),pre=r.cloneRange();pre.selectNodeContents(el);pre.setEnd(r.startContainer,r.startOffset);return pre.toString().length;}
+function caretEnd(el){const s=getSelection();if(!s.rangeCount)return 0;const r=s.getRangeAt(0),pre=r.cloneRange();pre.selectNodeContents(el);pre.setEnd(r.endContainer,r.endOffset);return pre.toString().length;}
+function place(el,off){el.focus();const s=getSelection(),r=document.createRange();let n=el.firstChild;
+  if(!n){r.setStart(el,0);}else{let rem=off;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let t,ok=false;while((t=w.nextNode())){if(rem<=t.length){r.setStart(t,rem);ok=true;break;}rem-=t.length;}if(!ok){r.selectNodeContents(el);r.collapse(false);}}
+  r.collapse(true);s.removeAllRanges();s.addRange(r);
+  requestAnimationFrame(keepCaret);}
+function syncEl(el){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].x=el.textContent.replace(/\n+$/,'');}
+function syncAll(){const e=ep();if(!e)return;[...script.children].forEach((el,i)=>{if(e.blocks[i])e.blocks[i].x=el.textContent;});}
+function setType(el,t){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].t=t;el.className='b '+t;el.dataset.ph=PH[t];
+  applyCorrect(el,t);
+  if(t==='paren')el.textContent=el.textContent.replace(/^\(|\)$/g,'');updateTypes(t);markDirty(e);updateSide();updateChips();}
+
+script.addEventListener('keydown',ev=>{
+  const el=cur();if(!el)return;const e=ep(),i=idx(el),b=e.blocks[i];
+  if((ev.key==='Enter'||ev.keyCode===13)&&!ev.shiftKey){
+    ev.preventDefault();enterLock=true;setTimeout(()=>{enterLock=false;},60);doEnter(el);return;
+  }
+  if(ev.key==='Tab'){ev.preventDefault();const k=TK.indexOf(b.t);setType(el,TK[(k+(ev.shiftKey?TK.length-1:1))%TK.length]);return;}
+  if((ev.ctrlKey||ev.metaKey)&&/^[1-6]$/.test(ev.key)){ev.preventDefault();setType(el,TK[+ev.key-1]);return;}
+  if(ev.key==='Backspace'&&i>0){
+    const a=caret(el),z=caretEnd(el);
+    if(a===0&&z===0){ev.preventDefault();const prev=script.children[i-1];syncEl(prev);syncEl(el);
+      const pb=e.blocks[i-1],pl=pb.x.length;pb.x+=el.textContent;prev.textContent=pb.x;e.blocks.splice(i,1);el.remove();place(prev,pl);markDirty(e);updateSide();onFocusChange();}
+    return;
+  }
+  if(ev.key==='Delete'&&i<e.blocks.length-1&&caret(el)===el.textContent.length&&caretEnd(el)===el.textContent.length){
+    ev.preventDefault();const nx=script.children[i+1];syncEl(el);b.x+=nx.textContent;const l=el.textContent.length;el.textContent=b.x;e.blocks.splice(i+1,1);nx.remove();place(el,l);markDirty(e);updateSide();return;}
+  if(ev.key==='ArrowUp'&&i>0&&caret(el)===0){ev.preventDefault();const p=script.children[i-1];place(p,p.textContent.length);}
+  if(ev.key==='ArrowDown'&&i<e.blocks.length-1&&caretEnd(el)===el.textContent.length){ev.preventDefault();place(script.children[i+1],0);}
+});
+let enterLock=false;
+function doEnter(el,a,z){
+  const e=ep(),i=idx(el);if(i<0)return;const b=e.blocks[i];
+  const text=el.textContent.replace(/\n/g,'');if(a==null){a=caret(el);z=caretEnd(el);}
+  b.x=text;
+  if(text.trim()===''){el.textContent='';b.x='';setType(el,EMPTY_ENTER[b.t]);place(el,0);return;}
+  const before=text.slice(0,a),after=text.slice(z);
+  const nt=after.trim()?b.t:NEXT[b.t];
+  b.x=before;el.textContent=before;
+  const nb={t:nt,x:after};e.blocks.splice(i+1,0,nb);const n=mk(nb);el.after(n);place(n,0);
+  markDirty(e);updateSide();onFocusChange();
+}
+/* iOS / Android keyboards often skip keydown for Return: catch it before and after it is inserted */
+script.addEventListener('beforeinput',ev=>{
+  if(ev.inputType!=='insertParagraph'&&ev.inputType!=='insertLineBreak')return;
+  ev.preventDefault();if(enterLock)return;const el=cur();if(el){enterLock=true;setTimeout(()=>{enterLock=false;},60);doEnter(el);}
+});
+script.addEventListener('input',ev=>{
+  const el=cur();if(!el)return;
+  if(ev.inputType==='insertParagraph'||ev.inputType==='insertLineBreak'){
+    const raw=el.innerText!==undefined&&el.querySelector('br,div')?el.innerText:el.textContent;const k=raw.indexOf('\n');
+    if(k>=0&&!enterLock){const clean=raw.slice(0,k)+raw.slice(k+1).replace(/\n/g,'');el.textContent=clean;enterLock=true;setTimeout(()=>{enterLock=false;},60);doEnter(el,k,k);return;}
+    if(k>=0){el.textContent=raw.replace(/\n/g,'');}
+  }
+  syncEl(el);const e=ep(),i=idx(el),b=e.blocks[i];
+  if(el.querySelector('br,div')){const t=el.textContent;el.textContent=t;place(el,t.length);}
+  if(b.t==='action'&&SCENE_RE.test(b.x)&&!/\s{2}/.test(b.x)){setType(el,'scene');}
+  else if(b.t==='dialogue'&&b.x==='('){el.textContent='';b.x='';setType(el,'paren');place(el,0);}
+  else if(b.t==='paren'&&/^\(|\)$/.test(b.x)){const o=caret(el);const t=b.x.replace(/^\(/,'').replace(/\)$/,'');el.textContent=t;b.x=t;place(el,Math.max(0,Math.min(t.length,o-1)));}
+  markDirty(e);updateChips();
+  clearTimeout(sideT);sideT=setTimeout(updateSide,400);
+});
+let sideT=null;
+script.addEventListener('paste',ev=>{
+  const el=cur();if(!el)return;ev.preventDefault();
+  const text=(ev.clipboardData||window.clipboardData).getData('text/plain').replace(/\r\n?/g,'\n');
+  if(!text.includes('\n')){document.execCommand('insertText',false,text);return;}
+  syncEl(el);const e=ep(),i=idx(el),a=caret(el),z=caretEnd(el),b=e.blocks[i];
+  const before=b.x.slice(0,a),after=b.x.slice(z);
+  const parsed=parseFountain(text);if(!parsed.length)return;
+  let ins=parsed;
+  if(before.trim()===''&&after.trim()===''){e.blocks.splice(i,1,...ins);}
+  else{b.x=before;e.blocks.splice(i+1,0,...ins);if(after.trim())e.blocks.splice(i+1+ins.length,0,{t:b.t,x:after});}
+  renderScript();const target=script.children[Math.min(e.blocks.length-1,i+ins.length-(before.trim()||after.trim()?0:1))];if(target)place(target,target.textContent.length);
+  markDirty(e);
+});
+document.addEventListener('selectionchange',()=>{const el=cur();if(el!==lastEl){lastEl=el;onFocusChange();}});
+let lastEl=null;
+function onFocusChange(){const el=cur();if(!el){return;}const b=ep().blocks[idx(el)];if(b)updateTypes(b.t);updateChips();}
+
+/* ---------- toolbar & suggestions ---------- */
+const typesEl=$('types'),chipsEl=$('chips');
+typesEl.innerHTML='<button class="type newscene" id="newSceneBtn" type="button">+ Νέα σκηνή</button>'+TYPES.map((t,i)=>`<button class="type" data-k="${t.k}" type="button">${t.l}<kbd>${i+1}</kbd></button>`).join('');
+['pointerdown','mousedown'].forEach(evn=>{typesEl.addEventListener(evn,e=>e.preventDefault());chipsEl.addEventListener(evn,e=>e.preventDefault());});
+function newScene(){syncAll();const e=ep();let el=lastEl&&lastEl.isConnected?lastEl:null;
+  if(el&&!el.textContent.trim()){setType(el,'scene');place(el,0);return;}
+  let i=el?idx(el):e.blocks.length-1;let j=i+1;while(j<e.blocks.length&&e.blocks[j].t!=='scene')j++;
+  const nb={t:'scene',x:''};e.blocks.splice(j,0,nb);const n=mk(nb);const ref=script.children[j];if(ref)script.insertBefore(n,ref);else script.appendChild(n);
+  place(n,0);n.scrollIntoView({block:'center',behavior:'smooth'});markDirty(e);updateSide();onFocusChange();}
+typesEl.insertAdjacentHTML('beforeend','<button class="type exitfocus" id="barExit" type="button" aria-label="Έξοδος εστίασης">✕</button>');
+typesEl.addEventListener('click',e=>{if(e.target.closest('#barExit')){setFocus(false);return;}if(e.target.closest('#newSceneBtn')){newScene();return;}const btn=e.target.closest('.type');if(!btn)return;let el=lastEl&&lastEl.isConnected?lastEl:script.lastElementChild;if(!el)return;setType(el,btn.dataset.k);place(el,el.textContent.length);});
+let curType='scene';
+function updateTypes(t){curType=t;[...typesEl.children].forEach(b=>{if(b.dataset.k)b.classList.toggle('on',b.dataset.k===t);});const tt=TYPES.find(x=>x.k===t);$('fLabel').textContent=tt?tt.l.replace(/[()]/g,''):'';}
+const fBtn=$('fBtn'),fPanel=$('fPanel');
+function openF(on){fPanel.hidden=!on;fBtn.setAttribute('aria-expanded',String(on));
+  if(on)fPanel.innerHTML=TYPES.map(t=>`<button type="button" data-k="${t.k}" class="${t.k===curType?'on':''}">${t.l}</button>`).join('')+'<hr><button type="button" data-a="scene">+ Νέα σκηνή</button><button type="button" data-a="exit" class="fexit">Έξοδος από την εστίαση</button>';}
+['pointerdown','mousedown'].forEach(n=>{fBtn.addEventListener(n,e=>e.preventDefault());fPanel.addEventListener(n,e=>e.preventDefault());});
+fBtn.addEventListener('click',()=>openF(fPanel.hidden));
+fPanel.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;openF(false);
+  if(b.dataset.a==='exit'){setFocus(false);return;}
+  if(b.dataset.a==='scene'){newScene();return;}
+  const el=lastEl&&lastEl.isConnected?lastEl:script.lastElementChild;if(el){setType(el,b.dataset.k);place(el,el.textContent.length);}});
+document.addEventListener('pointerdown',e=>{if(!fPanel.hidden&&!e.target.closest('#fmenu'))openF(false);});
+function sceneParts(x){const m=x.match(/^(\S+\.?(?:\/\S+\.?)?)\s+(.*)$/);if(!m)return null;const [loc,time]=m[2].split(/\s+-\s+/);return {pre:m[1],loc:(loc||'').trim(),time:time};}
+function knownLocations(){const set=new Map();S.eps.forEach(e=>e.blocks.forEach(b=>{if(b.t==='scene'){const p=sceneParts(b.x);if(p&&p.loc){const k=up(p.loc);set.set(k,(set.get(k)||0)+1);}}}));return [...set.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);}
+function knownChars(){const m=new Map();S.eps.forEach(e=>e.blocks.forEach(b=>{if(b.t==='character'&&b.x.trim()){const k=up(b.x.replace(/\(.*?\)/g,'').trim());if(k)m.set(k,(m.get(k)||0)+1);}}));return m;}
+function updateChips(){
+  const el=lastEl&&lastEl.isConnected?lastEl:null;let chips=[];
+  if(el){const b=ep().blocks[idx(el)];if(b){const x=b.x;
+    if(b.t==='scene'){
+      if(!x.trim())chips=['ΕΣΩΤ. ','ΕΞΩΤ. ','ΕΣΩΤ./ΕΞΩΤ. ','INT. ','EXT. '].map(v=>({l:v.trim(),v}));
+      else{const p=sceneParts(x);
+        if(p&&p.time!==undefined){const tq=up(p.time||'');chips=['ΜΕΡΑ','ΝΥΧΤΑ','ΠΡΩΙ','ΣΟΥΡΟΥΠΟ','ΑΡΓΟΤΕΡΑ','ΣΥΝΕΧΕΙΑ'].filter(t=>t.startsWith(tq)&&t!==tq).map(t=>({l:t,v:p.pre+' '+p.loc+' - '+t}));}
+        else if(p){const lq=up(p.loc);chips=knownLocations().filter(l=>l.startsWith(lq)&&l!==lq).slice(0,8).map(l=>({l,v:p.pre+' '+l+' - '}));if(p.loc)chips.push({l:'+ ΩΡΑ',v:p.pre+' '+p.loc+' - '});}
+      }
+    }else if(b.t==='character'){
+      const q=up(x.trim()),m=knownChars();const names=[...m.entries()].sort((a,b)=>b[1]-a[1]).map(z=>z[0]);
+      if(q&&names.includes(q.replace(/\(.*?\)/g,'').trim())&&!/\(/.test(q))chips=['(V.O.)','(O.S.)','(ΣΥΝΕΧ.)'].map(s=>({l:s,v:q+' '+s}));
+      else chips=names.filter(n=>n.startsWith(q)&&n!==q).slice(0,8).map(n=>({l:n,v:n}));
+    }else if(b.t==='transition'){
+      chips=['ΚΟΨΙΜΟ ΣΕ:','ΣΒΗΣΙΜΟ ΣΕ:','ΣΒΗΝΕΙ.','FADE IN:','CUT TO:'].filter(t=>t.startsWith(up(x))&&t!==up(x)).map(t=>({l:t,v:t}));
+    }
+  }}
+  chipsEl.innerHTML=chips.map((c,i)=>`<button class="chip" type="button" data-i="${i}">${esc(c.l)}</button>`).join('');
+  chipsEl._c=chips;
+}
+chipsEl.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c||!lastEl)return;const v=chipsEl._c[+c.dataset.i].v;lastEl.textContent=v;syncEl(lastEl);place(lastEl,v.length);markDirty(ep());updateChips();updateSide();});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* keep bar above the on-screen keyboard */
+/*__AC_START__*/
+const AC=(()=>{
+  const strip=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/ς/g,'σ');
+  const ROWS=['ςερτυθιοπ','ασδφγηξκλ','ζχψωβνμ'];const POS={};ROWS.forEach((r,y)=>[...r].forEach((c,x)=>POS[c]=[x+y*.5,y]));POS['σ']=POS['σ']||[1.5,1];
+  const near=(a,b)=>{const p=POS[a],q=POS[b];return p&&q&&Math.abs(p[0]-q[0])<=1.1&&Math.abs(p[1]-q[1])<=1;};
+  let words=null,keyMap=null,del=null,rank=null,byFirst=null;
+  function build(list){words=list;keyMap=new Map();del=new Map();rank=new Map();
+    byFirst=new Map();words.forEach((w,i)=>{const k=strip(w);if(!keyMap.has(k)){keyMap.set(k,w);let b=byFirst.get(k[0]);if(!b)byFirst.set(k[0],b=[]);b.push(k);}if(!rank.has(k))rank.set(k,i);
+      if(k.length>=3){for(let j=0;j<k.length;j++){const d=k.slice(0,j)+k.slice(j+1);let a=del.get(d);if(!a)del.set(d,a=[]);if(a[a.length-1]!==k)a.push(k);}}
+      let a=del.get(k);if(!a)del.set(k,a=[]);a.push(k);});}
+  function dist(a,b){const n=a.length,m=b.length;const d=[];for(let i=0;i<=n;i++){d[i]=[i];}for(let j=0;j<=m;j++)d[0][j]=j;
+    for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){const ca=a[i-1],cb=b[j-1];const sub=ca===cb?0:(near(ca,cb)?.6:1);
+      d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+sub);if(i>1&&j>1&&ca===b[j-2]&&a[i-2]===cb)d[i][j]=Math.min(d[i][j],d[i-2][j-2]+.7);}
+    return d[n][m];}
+  function dels(k){const out=new Set([k]);for(let j=0;j<k.length;j++)out.add(k.slice(0,j)+k.slice(j+1));return out;}
+  function correct(word){
+    if(!words)return null;
+    const k=strip(word);if(!k||!/^[α-ω]+$/.test(k))return null;
+    let best=null;
+    if(keyMap.has(k)){best=keyMap.get(k);}
+    else if(k.length>=3){
+      const cand=new Set();const d1=dels(k);
+      d1.forEach(x=>{(del.get(x)||[]).forEach(c=>cand.add(c));});
+      if(k.length>=5)d1.forEach(x=>{if(x===k)return;dels(x).forEach(y=>(del.get(y)||[]).forEach(c=>cand.add(c)));});
+      if(k.length>=6)(byFirst.get(k[0])||[]).forEach(c=>{if(Math.abs(c.length-k.length)<=1)cand.add(c);});
+      let bs=1e9;
+      cand.forEach(c=>{if(Math.abs(c.length-k.length)>2)return;const dd=dist(k,c);const lim=k.length<=4?1:k.length<=7?1.8:2.4;if(dd>lim)return;
+        const sc=dd+Math.log10(rank.get(c)+10)*.22+(c[0]===k[0]?0:.35);if(sc<bs){bs=sc;best=keyMap.get(c);}});
+    }
+    if(!best)return null;
+    let out=best;if(word[0]!==word[0].toLowerCase())out=out[0].toLocaleUpperCase('el')+out.slice(1);
+    if(word===word.toLocaleUpperCase('el')&&word.length>1)return null;
+    if(out.length>=2&&out[out.length-1]==='σ')out=out.slice(0,-1)+'ς';
+    return out===word?null:out;}
+  function addWord(w){if(!words)return;const k=strip(w);if(!/^[α-ω]+$/.test(k))return;
+    const isNew=!keyMap.has(k);keyMap.set(k,w);rank.set(k,3);
+    if(isNew){let b=byFirst.get(k[0]);if(!b)byFirst.set(k[0],b=[]);b.push(k);
+      const add=d=>{let a=del.get(d);if(!a)del.set(d,a=[]);if(!a.includes(k))a.push(k);};add(k);if(k.length>=3)for(let j=0;j<k.length;j++)add(k.slice(0,j)+k.slice(j+1));}}
+  const known=w=>!!words&&keyMap.has(strip(w))&&keyMap.get(strip(w))===w;
+  return {build,correct,addWord,known,ready:()=>!!words};
+})();
+/*__AC_END__*/
+
+/* ---------- personal vocabulary: words learned from iPhone corrections, reverted fixes, or added by hand ---------- */
+let vocab=[],vocabT=null;
+try{vocab=JSON.parse(localStorage.getItem('proza-vocab')||'[]').filter(w=>typeof w==='string');}catch(e){}
+function mergeVocab(list,save){let ch=false;list.forEach(w=>{w=String(w).trim();if(w&&!vocab.includes(w)){vocab.push(w);ch=true;if(AC.ready())AC.addWord(w);}});if(ch){renderVocab();if(save!==false)saveVocab();else{try{localStorage.setItem('proza-vocab',JSON.stringify(vocab))}catch(e){}}}}
+function addVocab(w){w=(w||'').trim();if(w.length<2||!/^[A-Za-zΑ-Ωα-ωΆΈΉΊΌΎΏάέήίόύώϊϋΐΰς]+$/.test(w))return false;if(vocab.includes(w))return false;mergeVocab([w]);toast('«'+w+'» μπήκε στο λεξιλόγιό σου');return true;}
+function removeVocab(w){vocab=vocab.filter(x=>x!==w);acIgnore.delete(w.toLowerCase());try{localStorage.setItem('proza-ac-ignore',JSON.stringify([...acIgnore]))}catch(e){}renderVocab();saveVocab();if(AC.ready()){AC.build(window.PROZA_DICT.split(' '));vocab.forEach(x=>AC.addWord(x));}}
+function saveVocab(){try{localStorage.setItem('proza-vocab',JSON.stringify(vocab))}catch(e){}
+  clearTimeout(vocabT);vocabT=setTimeout(async()=>{if(!remote)return;try{await db.collection('data/users/'+userId).doc('vocab').set({kind:'vocab',words:vocab.slice(-3000)});}catch(e){}},1500);}
+function renderVocab(){const box=$('vocabList');if(!box)return;$('vocabCount').textContent=vocab.length?String(vocab.length):'';
+  box.innerHTML=vocab.length?vocab.slice().reverse().map(w=>`<span class="vchip">${esc(w)}<button type="button" data-w="${esc(w)}" aria-label="Αφαίρεση ${esc(w)}">✕</button></span>`).join(''):'<span class="help">Οι λέξεις που διορθώνεις με το iPhone μπαίνουν εδώ αυτόματα.</span>';}
+$('vocabList').addEventListener('click',e=>{const b=e.target.closest('button[data-w]');if(b)removeVocab(b.dataset.w);});
+$('vocabForm').addEventListener('submit',e=>{e.preventDefault();const inp=$('vocabInput');if(addVocab(inp.value))inp.value='';else if(inp.value.trim())toast('Γράψε μία λέξη, μόνο γράμματα');});
+/* when the iPhone replaces a word (tap on a suggestion or on an underlined word), learn the result */
+let lastTyped='';
+script.addEventListener('beforeinput',ev=>{if(ev.inputType==='insertReplacementText'||(ev.inputType==='insertText'&&ev.data&&ev.data.length>2)){const el=cur();if(el){const b=ep().blocks[idx(el)];if(b&&b.t!=='character'&&b.t!=='scene')lastTyped=ev.inputType;}}});
+script.addEventListener('input',ev=>{
+  if(ev.inputType!=='insertReplacementText'&&!(ev.inputType==='insertText'&&ev.data&&ev.data.trim().length>2&&lastTyped==='insertText'))return;
+  lastTyped='';const el=cur();if(!el)return;const b=ep().blocks[idx(el)];if(!b||b.t==='character'||b.t==='scene'||b.t==='transition')return;
+  let w=ev.data&&ev.data.trim();
+  if(!w){const pos=caret(el);const m=el.textContent.slice(0,pos).replace(/[\s.,;:!?…»)·]+$/,'').match(/([A-Za-zΑ-Ωα-ωΆΈΉΊΌΎΏάέήίόύώϊϋΐΰς]+)$/);w=m&&m[1];}
+  if(!w||/\s/.test(w)||w.length<3)return;
+  const explicit=ev.inputType==='insertReplacementText';
+  if(!AC.ready()||(explicit?!AC.known(w):(!AC.correct(w)&&!AC.known(w))))addVocab(w);
+});
+/* ---------- Greek autocorrect for action lines (dictionary loads on demand) ---------- */
+let acOn=true,acLoading=false,lastCorr=null;const acIgnore=new Set();
+try{acOn=localStorage.getItem('proza-ac')!=='0';JSON.parse(localStorage.getItem('proza-ac-ignore')||'[]').forEach(w=>acIgnore.add(w));}catch(e){}
+function acLoad(){if(AC.ready()||acLoading||!acOn)return;acLoading=true;
+  loadScript('dict.js').then(()=>setTimeout(()=>{try{AC.build(window.PROZA_DICT.split(' '));vocab.forEach(w=>AC.addWord(w));}catch(e){}},30)).catch(()=>{acLoading=false;});}
+script.addEventListener('focusin',()=>{if(acOn)acLoad();});
+const WORD_END=/([A-Za-zΑ-Ωα-ωΆΈΉΊΌΎΏάέήίόύώϊϋΐΰς]+)$/;
+script.addEventListener('input',ev=>{
+  if(!acOn||!AC.ready()||ev.inputType!=='insertText'||!ev.data||!/^[\s.,;:!?…»)·]$/.test(ev.data))return;
+  const el=cur();if(!el)return;const e=ep(),i=idx(el),b=e.blocks[i];if(!b||b.t!=='action')return;
+  const text=el.textContent,pos=caret(el);const before=text.slice(0,pos-1),m=before.match(WORD_END);if(!m)return;
+  const word=m[1],start=before.length-word.length;
+  if(acIgnore.has(word.toLowerCase())||knownChars().has(up(word)))return;
+  const fix=AC.correct(word);if(!fix)return;
+  const nt=text.slice(0,start)+fix+text.slice(pos-1);el.textContent=nt;const np=start+fix.length+1;place(el,np);
+  lastCorr={el,start,original:word,fix,pos:np};syncEl(el);markDirty(e);
+});
+script.addEventListener('beforeinput',ev=>{
+  if(ev.inputType!=='deleteContentBackward'||!lastCorr)return;const el=cur();
+  if(el!==lastCorr.el||caret(el)!==lastCorr.pos||caretEnd(el)!==lastCorr.pos){lastCorr=null;return;}
+  ev.preventDefault();const c=lastCorr;lastCorr=null;const t=el.textContent;
+  if(t.slice(c.start,c.start+c.fix.length)!==c.fix)return;
+  el.textContent=t.slice(0,c.start)+c.original+t.slice(c.start+c.fix.length);place(el,c.start+c.original.length+1);
+  acIgnore.add(c.original.toLowerCase());addVocab(c.original);try{localStorage.setItem('proza-ac-ignore',JSON.stringify([...acIgnore].slice(-500)));}catch(e){}
+  syncEl(el);markDirty(ep());
+});
+script.addEventListener('keydown',ev=>{if(lastCorr&&ev.key!=='Backspace'&&ev.key.length===1&&ev.key!==' ')lastCorr=null;});
+function setAc(on){acOn=on;$('acBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('proza-ac',on?'1':'0')}catch(e){}if(on)acLoad();}
+$('acBtn').addEventListener('click',()=>setAc(!acOn));
+$('acBtn').setAttribute('aria-checked',String(acOn));
+/* ---------- English word → Greek suggestion bubble (asks Claude, replaces only on tap) ---------- */
+let sampleFn=null,sampleTried=false,trCtl=null,trState=null,trTimer=null;const keepEn=new Set();
+try{JSON.parse(localStorage.getItem('proza-keep-en')||'[]').forEach(w=>keepEn.add(w));}catch(e){}
+async function getSample(){if(sampleTried)return sampleFn;sampleTried=true;try{sampleFn=window.claude?await claude.use('sample'):null;}catch(e){sampleFn=null;}return sampleFn;}
+const tb=document.createElement('div');tb.className='tbubble';tb.hidden=true;tb.setAttribute('role','dialog');tb.setAttribute('aria-label','Ελληνική απόδοση');document.body.appendChild(tb);
+['pointerdown','mousedown'].forEach(n=>tb.addEventListener(n,e=>e.preventDefault()));
+function rangeFor(el,a,z){const r=document.createRange();const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let t,o=0,sa=false;
+  while((t=w.nextNode())){const L=t.length;if(!sa&&a<=o+L){r.setStart(t,a-o);sa=true;}if(sa&&z<=o+L){r.setEnd(t,z-o);return r;}o+=L;}return null;}
+function locate(){if(!trState||!trState.el.isConnected)return null;const t=trState.el.textContent;let i=trState.start;
+  if(t.slice(i,i+trState.word.length)!==trState.word){i=t.lastIndexOf(trState.word);if(i<0)return null;trState.start=i;}return i;}
+function posBubble(){if(tb.hidden)return;const i=locate();if(i==null){hideBubble();return;}const r=rangeFor(trState.el,i,i+trState.word.length);if(!r)return;
+  const rc=r.getBoundingClientRect(),bw=tb.offsetWidth,bh=tb.offsetHeight,vw=document.documentElement.clientWidth;
+  let x=Math.max(8,Math.min(rc.left+rc.width/2-bw/2,vw-bw-8));let y=rc.top-bh-8;const barB=document.body.classList.contains('focus')?40:$('bar').getBoundingClientRect().bottom;
+  if(y<barB+4)y=rc.bottom+8;tb.style.left=x+'px';tb.style.top=y+'px';}
+function hideBubble(){tb.hidden=true;trState=null;clearTimeout(trTimer);if(trCtl){trCtl.abort();trCtl=null;}}
+function showBubble(html){tb.innerHTML=html;tb.hidden=false;posBubble();clearTimeout(trTimer);trTimer=setTimeout(hideBubble,15000);}
+document.addEventListener('pointerdown',e=>{if(!tb.hidden&&!e.target.closest('.tbubble'))hideBubble();});
+window.addEventListener('scroll',()=>posBubble(),{passive:true});
+tb.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!trState)return;
+  if(b.dataset.act==='keep'){keepEn.add(trState.word.toLowerCase());try{localStorage.setItem('proza-keep-en',JSON.stringify([...keepEn].slice(-500)))}catch(_){}hideBubble();return;}
+  if(b.dataset.act==='close'){hideBubble();return;}
+  const opt=b.dataset.v;const i=locate();if(i==null||!opt){hideBubble();return;}
+  const el=trState.el,t=el.textContent,w=trState.word;let c=document.activeElement===el?caret(el):t.length;
+  el.textContent=t.slice(0,i)+opt+t.slice(i+w.length);if(c>i)c+=opt.length-w.length;place(el,Math.max(0,c));syncEl(el);markDirty(ep());hideBubble();});
+const EN_END=/(^|[^A-Za-z])([A-Za-z][A-Za-z'’-]{2,})$/;
+script.addEventListener('input',async ev=>{
+  if(!tb.hidden)posBubble();
+  if(ev.inputType!=='insertText'||!ev.data||!/^[\s.,;:!?…»)·]$/.test(ev.data))return;
+  const el=cur();if(!el)return;const b=ep().blocks[idx(el)];if(!b||!['action','dialogue','paren'].includes(b.t))return;
+  const text=el.textContent,pos=caret(el),before=text.slice(0,pos-1),m=before.match(EN_END);if(!m)return;
+  const word=m[2];if(!/[α-ωά-ώ]/i.test(text)&&!/[α-ω]/i.test(ep().blocks.map(x=>x.x).join(' ').slice(0,4000)))return;
+  if(keepEn.has(word.toLowerCase())||vocab.includes(word))return;
+  const fn=await getSample();if(!fn)return;
+  if(trCtl)trCtl.abort();trCtl=new AbortController();const ctl=trCtl;
+  trState={el,start:before.length-word.length,word};
+  showBubble(`<span class="tload">${esc(word)} → …</span>`);
+  const sentence=text.slice(Math.max(0,before.length-220),Math.min(text.length,pos+120));
+  const kind=b.t==='dialogue'?'μια ατάκα διαλόγου':'την περιγραφή μιας σκηνής';
+  const prompt=`Γράφω σενάριο στα ελληνικά. Στο παρακάτω κείμενο (${kind}) έγραψα την αγγλική λέξη "${word}" επειδή δεν θυμόμουν την ελληνική.\n\nΚείμενο: «${sentence}»\n\nΔώσε έως 3 ελληνικές αποδόσεις της λέξης "${word}", καθεμία έτοιμη να μπει στη θέση της μέσα στην πρόταση (σωστό γένος, αριθμός, πτώση, χρόνος), η καλύτερη πρώτη. Κάθε απόδοση έως 3 λέξεις, μόνο ελληνικά, με τόνους, χωρίς εξηγήσεις. Αν η λέξη είναι όνομα ή κάτι που δεν μεταφράζεται, δώσε κενή λίστα.\nΑπάντησε μόνο με JSON: {"options":["...","..."]}`;
+  try{const r=await fn.json(prompt,{modelTier:'quick',signal:ctl.signal});
+    if(ctl!==trCtl)return;const opts=(r&&Array.isArray(r.options)?r.options:[]).map(x=>String(x).trim()).filter(x=>x&&x.length<40).slice(0,3);
+    if(!opts.length){hideBubble();return;}
+    showBubble(opts.map(o=>`<button type="button" class="topt" data-v="${esc(o)}">${esc(o)}</button>`).join('')+`<button type="button" class="tkeep" data-act="keep" title="Μην το ξαναπροτείνεις">κράτα «${esc(word)}»</button><button type="button" class="tclose" data-act="close" aria-label="Κλείσιμο">✕</button>`);
+  }catch(e){if(ctl!==trCtl)return;if(e&&e.code==='cancelled')return;hideBubble();
+    if(e&&(e.code==='not_granted'))sampleFn=null;else if(e&&e.code==='rate_limited')toast('Πολλές μεταφράσεις μαζί. Δοκίμασε σε λίγο.');}
+});
+/* typewriter scrolling: while typing, the line being written stays ~4 lines above the keyboard; manual scrolling is left alone */
+function caretRect(){const s=getSelection();if(s.rangeCount){const r=s.getRangeAt(0);const rs=r.getClientRects();const rc=rs.length?rs[rs.length-1]:r.getBoundingClientRect();if(rc&&rc.height)return rc;}const el=cur();return el?el.getBoundingClientRect():null;}
+function keepCaret(){const rc=caretRect();if(!rc)return;
+  const lh=parseFloat(getComputedStyle(script).lineHeight)||parseFloat(getComputedStyle(script).fontSize)*1.3||20;
+  const vv=window.visualViewport;const kbdKnown=vv&&vv.height<innerHeight*0.85;const touch=matchMedia('(pointer:coarse)').matches;
+  const visBottom=kbdKnown?vv.offsetTop+vv.height:(touch?innerHeight*0.6:innerHeight);
+  const limit=visBottom-4*lh;
+  const topLimit=document.body.classList.contains('focus')?48:($('bar').getBoundingClientRect().bottom+12);
+  if(rc.bottom>limit)window.scrollBy({top:rc.bottom-limit,behavior:'smooth'});
+  else if(rc.top<topLimit)window.scrollBy({top:rc.top-topLimit-lh,behavior:'smooth'});}
+let kcRaf=0;script.addEventListener('input',()=>{cancelAnimationFrame(kcRaf);kcRaf=requestAnimationFrame(keepCaret);});
+/* triple space → comma (works with or without the iPhone double-space period) */
+script.addEventListener('input',ev=>{
+  if(ev.inputType!=='insertText'||ev.data!==' ')return;
+  const el=cur();if(!el)return;const b=ep().blocks[idx(el)];if(!b||!['action','dialogue','paren'].includes(b.t))return;
+  const t=el.textContent,pos=caret(el),before=t.slice(0,pos);let cut=0;
+  if(/[^\s.]\.\s\s$/.test(before))cut=3;else if(/\S\s{3}$/.test(before))cut=3;
+  if(!cut)return;
+  el.textContent=before.slice(0,-cut)+', '+t.slice(pos);place(el,pos-cut+2);syncEl(el);markDirty(ep());lastCorr=null;commaAt={el,pos:pos-cut+2};
+});
+/* the iPhone thinks a sentence ended (it saw ". "), so it capitalises the next word: undo that after our comma; character names keep their capital */
+let commaAt=null;
+script.addEventListener('input',ev=>{
+  if(!commaAt||ev.inputType!=='insertText'||!ev.data)return;
+  const el=cur();if(!el||el!==commaAt.el){commaAt=null;return;}
+  const pos=caret(el),t=el.textContent;
+  if(commaAt.start==null){
+    if(ev.data===' '&&pos===commaAt.pos)return;
+    if(ev.data.length===1&&pos===commaAt.pos+1){const ch=ev.data,lo=ch.toLocaleLowerCase('el');
+      if(lo!==ch){el.textContent=t.slice(0,pos-1)+lo+t.slice(pos);place(el,pos);syncEl(el);markDirty(ep());}
+      commaAt.start=pos-1;return;}
+    commaAt=null;return;}
+  if(/^[\s.,;:!?…»)·]$/.test(ev.data)){const w=t.slice(commaAt.start,pos-1);
+    if(w&&knownChars().has(up(w))){el.textContent=t.slice(0,commaAt.start)+w[0].toLocaleUpperCase('el')+t.slice(commaAt.start+1);place(el,pos);syncEl(el);markDirty(ep());}
+    commaAt=null;}
+});
+/* ---------- undo / redo: snapshots of the episode taken after each pause or structural change ---------- */
+let hist=[],hp=-1,histEp=null,histT=null,restoring=false;
+function snap(){const e=ep();const el=cur();return {blocks:e.blocks.map(b=>({t:b.t,x:b.x})),bi:el?idx(el):-1,off:el?caret(el):0};}
+function same(a,b){if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(a[i].t!==b[i].t||a[i].x!==b[i].x)return false;return true;}
+function histReset(){if(!ep())return;hist=[snap()];hp=0;histEp=S.cur;updUR();}
+function histPush(){clearTimeout(histT);histT=null;if(restoring||!ep())return;if(histEp!==S.cur){histReset();return;}
+  const sn=snap(),last=hist[hp];if(last&&same(last.blocks,sn.blocks)){last.bi=sn.bi;last.off=sn.off;return;}
+  hist=hist.slice(0,hp+1);hist.push(sn);if(hist.length>200)hist.shift();hp=hist.length-1;updUR();}
+function scheduleHist(){if(restoring)return;clearTimeout(histT);const last=hist[hp],e=ep();
+  if(last&&e&&last.blocks.length!==e.blocks.length){histT=setTimeout(histPush,0);return;}histT=setTimeout(histPush,600);}
+function restore(sn){restoring=true;const e=ep();syncAll();e.blocks=sn.blocks.map(b=>({t:b.t,x:b.x}));renderScript();
+  const el=script.children[Math.max(0,Math.min(sn.bi<0?e.blocks.length-1:sn.bi,e.blocks.length-1))];if(el)place(el,Math.min(sn.off,el.textContent.length));
+  markDirty(e);restoring=false;updUR();}
+function undo(){if(histT){histPush();}if(hp>0){hp--;restore(hist[hp]);}else toast('Δεν υπάρχει κάτι για αναίρεση');}
+function redo(){if(histT){histPush();}if(hp<hist.length-1){hp++;restore(hist[hp]);}}
+function updUR(){const u=hp<=0&&!histT,r=hp>=hist.length-1;['redoBtn','fRedo'].forEach(id=>$(id).disabled=r);}
+['undoBtn','redoBtn','fUndo','fRedo'].forEach(id=>{const b=$(id);['pointerdown','mousedown'].forEach(n=>b.addEventListener(n,e=>e.preventDefault()));b.addEventListener('click',()=>/undo|Undo/.test(id)?undo():redo());});
+document.addEventListener('keydown',ev=>{if(!(ev.ctrlKey||ev.metaKey))return;const k=ev.key.toLowerCase();
+  if(k==='z'&&!ev.shiftKey){ev.preventDefault();undo();}else if((k==='z'&&ev.shiftKey)||k==='y'){ev.preventDefault();redo();}});
+script.addEventListener('beforeinput',ev=>{if(ev.inputType==='historyUndo'){ev.preventDefault();undo();}else if(ev.inputType==='historyRedo'){ev.preventDefault();redo();}});
+/* ---------- backup: whole series in one file, restore, weekly reminder ---------- */
+const BK_KEY='proza-lastbk',DAY_MS=864e5;
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+function lastBk(){return +(lsGet(BK_KEY)||0);}
+function ago(t){if(!t)return 'ποτέ';const d=Math.floor((Date.now()-t)/DAY_MS);if(d<1)return 'σήμερα';if(d===1)return 'χθες';return 'πριν '+d+' μέρες';}
+function bkRefresh(){$('bkInfo').textContent='Τελευταίο αντίγραφο σε αυτή τη συσκευή: '+ago(lastBk())+'. Κάνε ένα κάθε λίγες μέρες και κράτα το στα Αρχεία ή στο iCloud.';
+  const lb=lastBk(),changed=S.eps.some(e=>(e.updated||0)>lb),words=S.eps.reduce((n,e)=>n+e.blocks.reduce((m,b)=>m+b.x.length,0),0);
+  const snooze=+(lsGet('proza-bksnooze')||0);
+  const show=!isExample&&changed&&words>400&&Date.now()-lb>7*DAY_MS&&Date.now()>snooze;
+  $('bkNoteText').textContent=lb?('Το τελευταίο αντίγραφο ασφαλείας ήταν '+ago(lb)+'.'):'Δεν έχεις κρατήσει ακόμα αντίγραφο ασφαλείας του σεναρίου σου.';
+  $('bkNote').hidden=!show;}
+async function doBackup(){syncAll();
+  const data={app:'Proza',version:1,created:new Date().toISOString(),series:S.series,episodes:S.eps.map(e=>({id:e.id,title:e.title,cover:e.cover==null?null:e.cover,blocks:e.blocks,updated:e.updated||0})),vocab};
+  const name=fname('Proza - '+(S.series||'σειρά')+' - '+new Date().toISOString().slice(0,10))+'.json';
+  if(await offer(name,JSON.stringify(data))){lsSet(BK_KEY,String(Date.now()));bkRefresh();toast('Το αντίγραφο ασφαλείας αποθηκεύτηκε');}}
+$('bkBtn').addEventListener('click',doBackup);
+$('bkNow').addEventListener('click',doBackup);
+$('bkLater').addEventListener('click',()=>{lsSet('proza-bksnooze',String(Date.now()+2*DAY_MS));$('bkNote').hidden=true;});
+let bkPending=null;
+$('bkFile').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.target.value='';if(!f)return;
+  let d;try{d=JSON.parse(await f.text());}catch(e){toast('Αυτό το αρχείο δεν είναι αντίγραφο της Proza');return;}
+  if(!d||d.app!=='Proza'||!Array.isArray(d.episodes)){toast('Αυτό το αρχείο δεν είναι αντίγραφο της Proza');return;}
+  bkPending=d;const when=d.created?new Date(d.created).toLocaleDateString('el-GR'):'';
+  $('bkConfirm').innerHTML=`<div class="confirm"><span>Βρέθηκαν ${d.episodes.length} επεισόδια (${esc(when)}). Θα προστεθούν δίπλα στα τωρινά, τίποτα δεν σβήνεται.</span><button class="yes" id="bkYes" style="background:var(--sel-bg);color:var(--sel-ink)">Επαναφορά</button><button id="bkNo">Άκυρο</button></div>`;});
+$('bkConfirm').addEventListener('click',e=>{
+  if(e.target.id==='bkNo'){bkPending=null;$('bkConfirm').innerHTML='';return;}
+  if(e.target.id!=='bkYes'||!bkPending)return;
+  syncAll();const d=bkPending;bkPending=null;let added=0,firstId=null;
+  d.episodes.forEach(x=>{if(!x||!Array.isArray(x.blocks))return;
+    const blocks=x.blocks.map(b=>({t:TK.includes(b&&b.t)?b.t:'action',x:String((b&&b.x)||'')}));
+    const ex=S.eps.find(e=>e.id===x.id);
+    if(ex&&same(ex.blocks,blocks))return;
+    const ne={id:ex||!x.id?uid():x.id,title:(x.title||'Επεισόδιο')+(ex?' (από αντίγραφο)':''),cover:x.cover==null?null:x.cover,blocks,updated:Date.now()};
+    S.eps.push(ne);dirty.add(ne.id);added++;if(!firstId)firstId=ne.id;});
+  if(Array.isArray(d.vocab))mergeVocab(d.vocab);
+  if((!S.series||S.series==='Η σειρά μου')&&d.series)S.series=d.series;
+  $('bkConfirm').innerHTML='';
+  if(!added){toast('Όλα τα επεισόδια του αντιγράφου υπάρχουν ήδη');return;}
+  seriesDirty=true;S.cur=firstId;markDirty(null);renderScript();closeDrawer();toast('Επανήλθαν '+added+' επεισόδια');});
+/* keep the top bar inside the visible area when the on-screen keyboard pans the page */
+if(window.visualViewport){const vv=visualViewport;const f=()=>{const off=Math.max(0,vv.offsetTop);$('bar').style.transform=off?`translateY(${off}px)`:'';};vv.addEventListener('resize',f);vv.addEventListener('scroll',f);}
+let edT=null;
+script.addEventListener('focusin',()=>{clearTimeout(edT);document.body.classList.add('editing');});
+script.addEventListener('focusout',()=>{clearTimeout(edT);edT=setTimeout(()=>{if(!script.contains(document.activeElement))document.body.classList.remove('editing');},150);});
+
+/* ---------- side panels ---------- */
+function updateSide(){
+  const e=ep();if(!e)return;
+  $('epTitle').value=e.title;$('seriesLabel').textContent=S.series||'Η σειρά μου';
+  if(document.activeElement!==$('seriesTitle'))$('seriesTitle').value=S.series;
+  $('epList').innerHTML=S.eps.map((x,i)=>`<button class="item ${x.id===S.cur?'on':''}" data-id="${x.id}"><span class="n">${i+1}</span><span class="tx">${esc(x.title||'Χωρίς τίτλο')}</span></button>`).join('');
+  let n=0;const sc=[];e.blocks.forEach((b,i)=>{if(b.t==='scene'){n++;sc.push(`<button class="item" data-b="${i}"><span class="n">${n}</span><span class="tx">${esc(up(b.x)||'Νέα σκηνή')}</span></button>`);}});
+  $('sceneList').innerHTML=sc.join('')||'<span class="help">Δεν υπάρχουν σκηνές ακόμα.</span>';
+  renderChars();
+  const pc=paginate();$('pages').textContent=pc+' σελ. · '+n+' σκην'+(n===1?'ή':'ές');
+}
+let openChar=null;
+function charIndex(){
+  const names=new Map();
+  S.eps.forEach(e=>e.blocks.forEach(b=>{if(b.t==='character'&&b.x.trim()){const k=up(b.x.replace(/\(.*?\)/g,'').trim());if(k&&!names.has(k))names.set(k,{lines:0,scenes:[]});}}));
+  const keys=[...names.keys()].map(k=>({k,re:new RegExp('(^|[^A-ZΑ-Ω0-9])'+k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=$|[^A-ZΑ-Ω0-9])')}));
+  S.eps.forEach((e,ei)=>{let sn=0,head='Αρχή επεισοδίου',start=0;const seen=new Map();
+    const flush=()=>{seen.forEach((v,k)=>names.get(k).scenes.push({ep:e.id,ei,sn,head,bi:start,speaks:v}));seen.clear();};
+    e.blocks.forEach((b,i)=>{
+      if(b.t==='scene'){flush();sn++;head=up(b.x)||'Νέα σκηνή';start=i;return;}
+      if(b.t==='character'){const k=up(b.x.replace(/\(.*?\)/g,'').trim());if(names.has(k)){names.get(k).lines++;seen.set(k,true);}return;}
+      if(b.t==='action'&&b.x){const U=up(b.x);keys.forEach(({k,re})=>{if(!seen.has(k)&&re.test(U))seen.set(k,false);});}
+    });flush();});
+  return names;
+}
+function renderChars(){
+  const idx=charIndex();const list=[...idx.entries()].sort((a,b)=>b[1].lines-a[1].lines||a[0].localeCompare(b[0]));
+  if(!list.length){$('charList').innerHTML='<span class="help">Οι χαρακτήρες εμφανίζονται εδώ μόλις μιλήσουν.</span>';return;}
+  $('charList').innerHTML=list.map(([k,v])=>{
+    const ns=v.scenes.length;let inner='';
+    if(openChar===k){let lastEp=null;inner='<div class="charscenes">'+v.scenes.map(s=>{let h='';if(S.eps.length>1&&s.ep!==lastEp){lastEp=s.ep;h+=`<div class="ep">${esc(S.eps[s.ei].title||('Επεισόδιο '+(s.ei+1)))}</div>`;}
+      return h+`<button class="item ${s.ep===S.cur?'here':''}" data-ep="${s.ep}" data-b="${s.bi}"><span class="n">${s.sn||'–'}</span><span class="tx">${esc(s.head)}</span>${s.speaks?'':'<span class="tag">αναφορά</span>'}</button>`;}).join('')+(ns?'':'<span class="help">Δεν εμφανίζεται ακόμα σε σκηνή.</span>')+'</div>';}
+    return `<div class="charrow ${openChar===k?'open':''}"><button class="item" data-ch="${esc(k)}" aria-expanded="${openChar===k}"><span class="tx">${esc(k)}</span><span class="c">${v.lines} ατ. · ${ns} σκ.</span></button>${inner}</div>`;}).join('');
+}
+$('charList').addEventListener('click',ev=>{
+  const c=ev.target.closest('[data-ch]');if(c){openChar=openChar===c.dataset.ch?null:c.dataset.ch;renderChars();return;}
+  const s=ev.target.closest('[data-ep]');if(!s)return;
+  if(s.dataset.ep!==S.cur){syncAll();S.cur=s.dataset.ep;localSave();renderScript();}
+  closeDrawer();const el=script.children[+s.dataset.b];if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}
+});
+function setFocus(on){document.body.classList.toggle('focus',on);try{localStorage.setItem('scr-focus',on?'1':'')}catch(e){}if(on){const el=lastEl&&lastEl.isConnected?lastEl:script.lastElementChild;if(el)place(el,el.textContent.length);}}
+$('focusBtn').addEventListener('click',()=>setFocus(true));
+$('focusExit').addEventListener('click',()=>setFocus(false));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('focus'))setFocus(false);});
+try{if(localStorage.getItem('scr-focus'))document.body.classList.add('focus');}catch(e){}
+function setPaper(on){document.body.classList.toggle('paperlight',on);$('paperBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('scr-paper',on?'1':'')}catch(e){}}
+$('paperBtn').addEventListener('click',()=>setPaper(!document.body.classList.contains('paperlight')));
+try{if(localStorage.getItem('scr-paper'))setPaper(true);}catch(e){}
+const PW={scene:61,action:61,character:38,dialogue:35,paren:26,transition:61},PG={scene:2,action:1,character:1,dialogue:0,paren:0,transition:1},PAGE_LINES=55;
+function wrapLines(text,w){const out=[];text.split('\n').forEach(par=>{let cur='';par.split(/\s+/).filter(Boolean).forEach(word=>{while(word.length>w){if(cur){out.push(cur);cur='';}out.push(word.slice(0,w));word=word.slice(w);}if(!cur)cur=word;else if(cur.length+1+word.length>w){out.push(cur);cur=word;}else cur+=' '+word;});out.push(cur);});return out.length?out:[''];}
+function blockLines(b){return Math.max(1,wrapLines(b.t==='paren'&&b.x.trim()?'('+b.x.trim()+')':b.x,PW[b.t]).length)+(b.t==='scene'?1:0);}
+/* breaks pages like a printed script: Courier 12pt, 55 lines; a scene heading or a character name never sits alone at the bottom */
+function pageBreaks(e){const B=e.blocks,br=[];let used=0,start=0;const STICKY={scene:1,character:1,paren:1};
+  B.forEach((b,i)=>{const l=blockLines(b),gap=used?PG[b.t]:0;let need=l;
+    if(b.t==='scene')need=l+2;if(b.t==='character'){const nx=B[i+1];need=l+(nx&&(nx.t==='dialogue'||nx.t==='paren')?Math.min(2,blockLines(nx)):0);}
+    if(used&&used+gap+need>PAGE_LINES){
+      let j=i;while(j-1>start&&STICKY[B[j-1].t])j--;
+      br.push(j);start=j;used=0;for(let k=j;k<=i;k++)used+=(k===j?0:PG[B[k].t])+blockLines(B[k]);
+    }else used+=gap+l;});
+  return br;}
+let pgT=null;
+function paginate(){const e=ep();if(!e)return 1;const br=pageBreaks(e);
+  cancelAnimationFrame(pgT);pgT=requestAnimationFrame(()=>{const box=$('pgmarks');if(!box)return;let h='<span class="pgfirst">1.</span>';
+    br.forEach((bi,k)=>{const el=script.children[bi];if(!el)return;const mt=parseFloat(getComputedStyle(el).marginTop)||0;const y=el.offsetTop-mt/2-6;h+=`<div class="pgmark" style="top:${y}px"><span>${k+2}.</span></div>`;});box.innerHTML=h;});
+  return br.length+1;}
+addEventListener('resize',()=>paginate());
+
+$('epList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;syncAll();S.cur=b.dataset.id;localSave();renderScript();closeDrawer();resetDel();script.firstElementChild&&window.scrollTo({top:0});});
+$('sceneList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;const el=script.children[+b.dataset.b];closeDrawer();if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}});
+$('addScene').addEventListener('click',()=>{closeDrawer();lastEl=null;setTimeout(newScene,50);});
+$('addEp').addEventListener('click',()=>{syncAll();const e={id:uid(),title:'Επεισόδιο '+(S.eps.length+1),blocks:[{t:'scene',x:''}],updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();closeDrawer();setTimeout(()=>place(script.firstElementChild,0),50);});
+$('epTitle').addEventListener('input',e=>{const x=ep();x.title=e.target.value;markDirty(x);$('epList').querySelector('.on .tx').textContent=x.title||'Χωρίς τίτλο';});
+$('seriesTitle').addEventListener('input',e=>{S.series=e.target.value;seriesDirty=true;markDirty(null);$('seriesLabel').textContent=S.series||'Η σειρά μου';});
+function resetDel(){$('delWrap').innerHTML='<button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button>';}
+$('delWrap').addEventListener('click',ev=>{
+  if(ev.target.id==='delEp'){$('delWrap').innerHTML=`<div class="confirm"><span>Διαγραφή του «${esc(ep().title)}»;</span><button class="yes" id="delYes">Διαγραφή</button><button id="delNo">Άκυρο</button></div>`;}
+  else if(ev.target.id==='delNo')resetDel();
+  else if(ev.target.id==='delYes'){
+    const id=S.cur;S.eps=S.eps.filter(e=>e.id!==id);dirty.add(id);seriesDirty=true;
+    if(!S.eps.length)S.eps.push({id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()});
+    S.cur=S.eps[0].id;markDirty(null);renderScript();resetDel();toast('Το επεισόδιο διαγράφηκε');
+  }
+});
+$('clearExample').addEventListener('click',()=>{const e=ep();e.blocks=[{t:'scene',x:''}];markDirty(e);renderScript();place(script.firstElementChild,0);});
+const drawer=$('drawer'),scrim=$('scrim');
+$('menuBtn').addEventListener('click',()=>{syncAll();updateSide();bkRefresh();drawer.classList.add('open');scrim.classList.add('open');});
+function closeDrawer(){drawer.classList.remove('open');scrim.classList.remove('open');}
+scrim.addEventListener('click',closeDrawer);
+
+/* ---------- import / export ---------- */
+function parseFountain(text){
+  const lines=text.replace(/\r\n?/g,'\n').split('\n');const out=[];let i=0;
+  const isScene=l=>/^\.[^.]/.test(l)||SCENE_RE.test(l.trim());
+  const isCaps=l=>{const t=l.trim();return t.length>0&&t.length<45&&t===up(t)&&/[A-ZΑ-Ω]/.test(t)&&!/[.!?…]$/.test(t.replace(/\(.*\)$/,'').trim())||/^@/.test(t);};
+  while(i<lines.length){
+    let l=lines[i];const t=l.trim();
+    if(!t){i++;continue;}
+    if(/^title:|^author:|^credit:|^draft date:/i.test(t)&&out.length===0){while(i<lines.length&&lines[i].trim())i++;continue;}
+    if(isScene(t)){out.push({t:'scene',x:t.replace(/^\./,'').replace(/\s+#.*#$/,'')});i++;continue;}
+    if(/^>/.test(t)&&!/<$/.test(t)){out.push({t:'transition',x:t.replace(/^>\s*/,'')});i++;continue;}
+    if(/(TO:|ΣΕ:)$/.test(t)&&t===up(t)&&(!lines[i+1]||!lines[i+1].trim())){out.push({t:'transition',x:t});i++;continue;}
+    const nextL=lines[i+1];
+    if(isCaps(t)&&nextL!==undefined&&nextL.trim()){
+      out.push({t:'character',x:t.replace(/^@/,'')});i++;
+      while(i<lines.length&&lines[i].trim()){const d=lines[i].trim();
+        if(/^\(.*\)$/.test(d))out.push({t:'paren',x:d.slice(1,-1)});
+        else{const last=out[out.length-1];if(last.t==='dialogue')last.x+='\n'+d;else out.push({t:'dialogue',x:d});}
+        i++;}
+      continue;
+    }
+    let para=t.replace(/^!/,'');i++;while(i<lines.length&&lines[i].trim()&&!isScene(lines[i].trim())){para+='\n'+lines[i].trim();i++;}
+    out.push({t:'action',x:para});
+  }
+  return out;
+}
+function toFountain(e){
+  let s=`Title: ${coverText(e).replace(/\n/g,'\n    ')}\n\n`;
+  let sn=0;
+  e.blocks.forEach((b,i)=>{const x=b.x.trim();if(b.t==='scene')sn++;if(!x&&b.t!=='action')return;
+    switch(b.t){
+      case 'scene':{const h=up(x);s+='\n'+(/^(INT|EXT|EST|INT\.?\/EXT|I\/E)[\.\s]/.test(h)?h:'.'+h)+' #'+sn+'#\n\n';break;}
+      case 'action':if(x)s+=x+'\n\n';break;
+      case 'character':{const c=up(x);s+=(/^[A-Z0-9 .'()\-]+$/.test(c)?c:'@'+c)+'\n';break;}
+      case 'paren':s+='('+x+')\n';break;
+      case 'dialogue':{s+=x+'\n';const n=e.blocks[i+1];if(!n||(n.t!=='paren'&&n.t!=='dialogue'))s+='\n';break;}
+      case 'transition':s+='> '+up(x)+'\n\n';break;
+    }});
+  return s.replace(/\n{3,}/g,'\n\n');
+}
+function toHtml(e){
+  const br=new Set(pageBreaks(e));let pg=1;
+  const body='<section class="pg"><div class="num">1.</div>'+e.blocks.map((b,i)=>{let pre='';if(br.has(i)){pg++;pre=`</section><section class="pg"><div class="num">${pg}.</div>`;}const x=esc(b.x.trim()).replace(/\n/g,'<br>');if(!x)return pre;return pre+`<div class="${b.t}${pre?' first':''}">${b.t==='paren'?'('+x+')':x}</div>`;}).join('\n')+'</section>';
+  return `<!doctype html><html lang="el"><head><meta charset="utf-8"><title>${esc(S.series)} – ${esc(e.title)}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cousine:wght@400;700&display=swap" rel="stylesheet">
+<style>@page{size:A4;margin:1in 1in 1in 1.5in}
+.pg{position:relative;padding-top:.1in;break-before:page}.pg .num{position:absolute;right:-.5in;top:-.6in}.pg>.first,.pg>.num+div{margin-top:0!important}
+@media screen{.pg{border-top:1px dashed #bbb;margin-top:1in;padding-top:.8in}.pg .num{top:.2in;right:0}}
+body{font-family:Cousine,"Courier New",monospace;font-size:12pt;line-height:1.2;max-width:6in;margin:1in auto;color:#000;background:#fff}
+.tp{height:9in;display:flex;flex-direction:column;justify-content:center;text-align:center;page-break-after:always}.tp h1{font-size:14pt;text-transform:uppercase;margin:0 0 1em}
+div{white-space:normal}.scene{text-transform:uppercase;font-weight:bold;margin-top:2.4em;page-break-after:avoid}.action{margin-top:1.2em}.character{text-transform:uppercase;margin:1.2em 0 0 2in;page-break-after:avoid}
+.dialogue{margin:0 1.5in 0 1in}.paren{margin:0 2in 0 1.5in;page-break-after:avoid}.transition{text-transform:uppercase;text-align:right;margin-top:1.2em}
+.note{font-family:system-ui;font-size:11pt;background:#eef;padding:8px 12px;border-radius:6px}@media print{.note{display:none}}</style></head><body>
+<p class="note">Για PDF: άνοιξε το αρχείο στον browser και επίλεξε Εκτύπωση → Αποθήκευση ως PDF.</p>
+<div class="tp"><h1>${esc(coverText(e)).replace(/\n/g,'<br>')}</h1></div>
+${body}</body></html>`;
+}
+const fname=s=>(s||'senario').replace(/[\\/:*?"<>|]+/g,'').trim().slice(0,80)||'senario';
+const MIME={pdf:'application/pdf',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',txt:'text/plain',json:'application/json',html:'text/html'};
+function saveSheet(file){return new Promise(res=>{const box=document.createElement('div');box.className='savesheet';
+  box.innerHTML=`<span>${esc(file.name)}</span><button type="button" class="ok">Αποθήκευση</button><button type="button" class="no">✕</button>`;document.body.appendChild(box);
+  const done=v=>{box.remove();res(v);};
+  box.querySelector('.no').onclick=()=>done(false);
+  box.querySelector('.ok').onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:file.name});}
+      else{const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=file.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},4000);}done(true);}
+    catch(e){done(!(e&&e.name==='AbortError')?false:false);}};});}
+async function offer(filename,data){
+  if(window.claude){try{const d=await claude.use('downloads');if(!d){toast('Η λήψη δεν είναι διαθέσιμη εδώ.');return false;}await d.save({filename,data});return true;}
+    catch(e){if(e&&e.code==='declined')return false;toast('Η λήψη δεν έγινε. Δοκίμασε ξανά.');return false;}}
+  const ext=filename.split('.').pop().toLowerCase();const blob=data instanceof Blob?data:new Blob([data],{type:MIME[ext]||'application/octet-stream'});
+  return saveSheet(new File([blob],filename,{type:MIME[ext]||blob.type}));
+}
+$('expTxt').addEventListener('click',()=>{syncAll();const e=ep();offer(fname(S.series+' - '+e.title)+'.txt',toFountain(e));});
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=()=>res();s.onerror=()=>rej(new Error('load '+src));document.head.appendChild(s);});}
+const dispText=b=>{const x=b.x.replace(/\s+$/,'');return b.t==='scene'||b.t==='character'||b.t==='transition'?up(x):b.t==='paren'?(x.trim()?'('+x.trim()+')':''):x;};
+const PX={scene:0,action:0,character:158,dialogue:72,paren:115,transition:0};
+async function buildPdf(e){
+  if(!window.jspdf)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+  if(!window.SCR_FONTS)await loadScript('fonts.js');
+  const doc=new window.jspdf.jsPDF({unit:'pt',format:'a4'});
+  doc.addFileToVFS('Cousine-R.ttf',SCR_FONTS.r);doc.addFont('Cousine-R.ttf','Cousine','normal');
+  doc.addFileToVFS('Cousine-B.ttf',SCR_FONTS.b);doc.addFont('Cousine-B.ttf','Cousine','bold');
+  doc.setProperties({title:coverText(e)||e.title});
+  const W=595.28,H=841.89,L=108,R=W-72,T=72,LH=12;doc.setFontSize(12);
+  const cov=up(coverText(e)||'').split('\n').filter(Boolean);doc.setFont('Cousine','bold');doc.setFontSize(14);
+  cov.forEach((l,i)=>doc.text(l,W/2,H/2-((cov.length-1)*18)/2+i*18,{align:'center'}));
+  doc.setFontSize(12);
+  const br=new Set(pageBreaks(e));let page=1,y=T,top=true,sn=0;
+  const num=p=>{doc.setFont('Cousine','normal');doc.text(p+'.',R,44,{align:'right'});};
+  doc.addPage();num(1);
+  e.blocks.forEach((b,i)=>{
+    if(br.has(i)){doc.addPage();page++;num(page);y=T;top=true;}
+    y+=(top?0:PG[b.t])*LH;top=false;
+    const lines=wrapLines(dispText(b),PW[b.t]);if(b.t==='scene')lines.unshift('ΣΚΗΝΗ '+(++sn));
+    lines.forEach((l,k)=>{doc.setFont('Cousine',b.t==='scene'&&k>0?'bold':'normal');if(l){if(b.t==='transition')doc.text(l,R,y+9.5,{align:'right'});else doc.text(l,L+PX[b.t],y+9.5);}y+=LH;});
+  });
+  return doc.output('arraybuffer');
+}
+const xe=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function buildDocx(e){
+  if(!window.JSZip)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+  const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"';
+  const F='<w:rFonts w:ascii="Courier New" w:hAnsi="Courier New" w:cs="Courier New" w:eastAsia="Courier New"/><w:sz w:val="24"/><w:szCs w:val="24"/>';
+  const runs=(t,bold)=>t.split('\n').map((l,i)=>`<w:r><w:rPr>${F}${bold?'<w:b/>':''}</w:rPr>${i?'<w:br/>':''}<w:t xml:space="preserve">${xe(l)}</w:t></w:r>`).join('');
+  const IND={scene:[0,0],action:[0,0],character:[3168,0],dialogue:[1440,2160],paren:[2304,2880],transition:[0,0]};
+  let body='';
+  const cov=up(coverText(e)||'');
+  body+=`<w:p><w:pPr><w:spacing w:before="4800"/><w:jc w:val="center"/></w:pPr>${runs(cov,true)}</w:p><w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+  let first=true,sn=0;
+  e.blocks.forEach(b=>{const t=dispText(b);const [l,r]=IND[b.t];let before=first?0:PG[b.t]*240;first=false;
+    if(b.t==='scene'){body+=`<w:p><w:pPr><w:keepNext/><w:spacing w:before="${before}" w:after="0" w:line="240" w:lineRule="exact"/></w:pPr>${runs('ΣΚΗΝΗ '+(++sn),false)}</w:p>`;before=0;}
+    const keep=b.t==='scene'||b.t==='character'||b.t==='paren'?'<w:keepNext/>':'';
+    body+=`<w:p><w:pPr>${keep}<w:spacing w:before="${before}" w:after="0" w:line="240" w:lineRule="exact"/><w:ind w:left="${l}" w:right="${r}"/>${b.t==='transition'?'<w:jc w:val="right"/>':''}</w:pPr>${t?runs(t,b.t==='scene'):''}</w:p>`;});
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${body}<w:sectPr><w:headerReference w:type="default" r:id="rId2"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="2160" w:header="720" w:footer="720" w:gutter="0"/><w:pgNumType w:start="0"/><w:titlePg/></w:sectPr></w:body></w:document>`;
+  const hdr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:hdr ${NS}><w:p><w:pPr><w:jc w:val="right"/></w:pPr><w:r><w:rPr>${F}</w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr>${F}</w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:rPr>${F}</w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr>${F}</w:rPr><w:t>1</w:t></w:r><w:r><w:rPr>${F}</w:rPr><w:fldChar w:fldCharType="end"/></w:r><w:r><w:rPr>${F}</w:rPr><w:t>.</w:t></w:r></w:p></w:hdr>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${NS}><w:docDefaults><w:rPrDefault><w:rPr>${F}<w:lang w:val="el-GR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="exact"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+  const z=new JSZip();
+  z.file('[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/></Types>');
+  z.file('_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>');
+  z.file('word/_rels/document.xml.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/header" Target="header1.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/></Relationships>');
+  z.file('word/document.xml',doc);z.file('word/header1.xml',hdr);z.file('word/styles.xml',styles);
+  z.file('word/settings.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings ${NS}><w:defaultTabStop w:val="720"/></w:settings>`);
+  return z.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+async function exportAs(kind){syncAll();const e=ep();toast(kind==='pdf'?'Δημιουργία PDF…':'Δημιουργία αρχείου Word…');
+  try{const data=kind==='pdf'?await buildPdf(e):await buildDocx(e);await offer(fname(S.series+' - '+e.title)+'.'+kind,data);}
+  catch(err){toast('Δεν ήταν δυνατή η δημιουργία του αρχείου. Δοκίμασε ξανά.');}}
+$('expPdf').addEventListener('click',()=>exportAs('pdf'));
+$('expDocx').addEventListener('click',()=>exportAs('docx'));
+$('copyTxt').addEventListener('click',async()=>{syncAll();const t=toFountain(ep());
+  try{await navigator.clipboard.writeText(t);toast('Αντιγράφηκε στο πρόχειρο');}
+  catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Αντιγράφηκε στο πρόχειρο');}catch(_){toast('Η αντιγραφή δεν επιτρέπεται εδώ');}ta.remove();}});
+$('importFile').addEventListener('change',async ev=>{const f=ev.target.files[0];if(!f)return;const text=await f.text();const blocks=parseFountain(text);ev.target.value='';
+  if(!blocks.length){toast('Δεν βρέθηκε κείμενο στο αρχείο');return;}
+  syncAll();const e={id:uid(),title:f.name.replace(/\.(txt|fountain)$/i,''),blocks,updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();closeDrawer();toast('Εισήχθη ως νέο επεισόδιο');});
+
+let toastT;function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600);}
+function renderAll(){renderVocab();renderScript();setTimeout(bkRefresh,0);updateTypes('scene');updateChips();}
+const _ls=localSave;localSave=function(){S.example=isExample;_ls();};
+boot();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}
+</script>
+</body>
+</html>
