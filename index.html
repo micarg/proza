@@ -58,7 +58,7 @@ button:active{transform:scale(.97)}
 #epTitle:focus{outline:none}
 .top{overflow:hidden}
 .focusico{display:none}
-@media (max-width:520px){.top{flex-wrap:wrap;gap:8px;row-gap:3px;padding-block:8px 7px}.series{display:none}#epTitle{font-size:17px}.titles{order:2}.urgroup{order:3}#focusBtn{order:4;width:38px;padding:0}#focusBtn .lbl{display:none}.focusico{display:block}.urbtn{width:32px}
+@media (max-width:520px){.top{flex-wrap:wrap;gap:8px;row-gap:3px;padding-block:8px 7px}.series{display:none}#epTitle{font-size:17px}.titles{order:2}.urgroup{order:3}#saveBtn{order:4;width:38px;padding:0}#saveBtn .lbl{display:none}#focusBtn{order:5;width:38px;padding:0}#focusBtn .lbl{display:none}.focusico{display:block}.urbtn{width:32px}
   .meta{order:10;flex-basis:100%;display:flex;gap:6px;justify-content:flex-start;text-align:left;font-size:12px;padding-left:46px;line-height:1.2;max-width:none}
   .meta .save::before{content:'· '}.meta .save{display:inline}}
 .meta{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;line-height:1.35}
@@ -245,6 +245,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
     <span class="series" id="seriesLabel">Η σειρά μου</span>
     <input id="epTitle" aria-label="Τίτλος επεισοδίου" value="Επεισόδιο 1">
   </div>
+  <button class="iconbtn" id="saveBtn" type="button" title="Αποθήκευση αντιγράφου ασφαλείας" aria-label="Αποθήκευση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a1 1 0 0 1 1-2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 3v5h7V3M8 21v-7h8v7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="lbl">Αποθήκευση</span></button>
   <button class="iconbtn" id="focusBtn" title="Λειτουργία εστίασης" aria-label="Εστίαση"><svg class="focusico" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="lbl">Εστίαση</span></button>
   <div class="meta"><span id="pages">~1 σελ.</span><span class="save" id="saveState">Φόρτωση…</span></div>
 </header>
@@ -840,6 +841,7 @@ async function doBackup(){syncAll();
   const name=fname('Proza - '+(S.series||'σειρά')+' - '+new Date().toISOString().slice(0,10))+'.json';
   if(await offer(name,JSON.stringify(data))){lsSet(BK_KEY,String(Date.now()));bkRefresh();toast('Το αντίγραφο ασφαλείας αποθηκεύτηκε');}}
 $('bkBtn').addEventListener('click',doBackup);
+$('saveBtn').addEventListener('click',doBackup);
 $('bkNow').addEventListener('click',doBackup);
 $('bkLater').addEventListener('click',()=>{lsSet('proza-bksnooze',String(Date.now()+2*DAY_MS));$('bkNote').hidden=true;});
 let bkPending=null;
@@ -1037,7 +1039,9 @@ async function offer(filename,data){
   if(window.claude){try{const d=await claude.use('downloads');if(!d){toast('Η λήψη δεν είναι διαθέσιμη εδώ.');return false;}await d.save({filename,data});return true;}
     catch(e){if(e&&e.code==='declined')return false;toast('Η λήψη δεν έγινε. Δοκίμασε ξανά.');return false;}}
   const ext=filename.split('.').pop().toLowerCase();const blob=data instanceof Blob?data:new Blob([data],{type:MIME[ext]||'application/octet-stream'});
-  return saveSheet(new File([blob],filename,{type:MIME[ext]||blob.type}));
+  const file=new File([blob],filename,{type:MIME[ext]||blob.type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file],title:filename});return true;}catch(e){if(e&&e.name==='AbortError')return false;}}
+  return saveSheet(file);
 }
 $('expTxt').addEventListener('click',()=>{syncAll();const e=ep();offer(fname(S.series+' - '+e.title)+'.txt',toFountain(e));});
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=()=>res();s.onerror=()=>rej(new Error('load '+src));document.head.appendChild(s);});}
