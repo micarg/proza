@@ -120,7 +120,7 @@ button:active{transform:scale(.97)}
 .b.transition{text-transform:uppercase;text-align:right;margin-top:1.2em}
 #script>.b:first-child{margin-top:0}
 .loading{font-family:var(--ui);color:var(--p-muted);font-size:14px;padding:20px 0}
-.page.cover{min-height:auto;aspect-ratio:8.5/11;max-height:11in;display:flex;align-items:center;justify-content:center;margin-bottom:28px;padding:1in}
+.page.cover{min-height:0;height:auto;aspect-ratio:8.5/11;max-height:none;display:flex;align-items:center;justify-content:center;margin-bottom:28px;padding:1in}
 .covertitle{font-family:var(--script);font-size:14pt;font-weight:700;text-transform:uppercase;text-align:center;white-space:pre-wrap;outline:none;min-width:8ch;max-width:100%;line-height:1.5;padding:4px 8px;border-radius:6px;caret-color:var(--p-ink)}
 .covertitle:focus{background:var(--p-hl)}
 .covertitle:empty::before{content:attr(data-ph);color:var(--p-muted);opacity:.7}
@@ -166,6 +166,9 @@ body.focus .top,body.focus .drawer,body.focus .scrim,body.focus .example,body.fo
 body.focus .bar,body.focus .focusExit{display:none!important}
 /* focus mode: one near-invisible control, a small sheet only on demand */
 .fmenu{display:none}
+.fleave{display:none}
+body.focus .fleave{display:grid;place-items:center;position:fixed;top:calc(6px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));z-index:20;width:34px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--p-muted);opacity:.45;transition:opacity .2s,background .2s}
+body.focus .fleave:hover,body.focus .fleave:focus-visible{opacity:1;background:var(--p-hl)}
 body.focus .fmenu{display:flex;align-items:flex-start;gap:2px;position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));z-index:20}
 .fbtn{border:0;background:transparent;color:var(--p-muted);font-size:12.5px;font-weight:500;height:30px;padding:0 10px;border-radius:999px;opacity:.5;display:inline-flex;align-items:center;gap:5px;letter-spacing:0;transition:opacity .2s,background .2s}
 .fbtn:hover,.fbtn:focus-visible,.fbtn[aria-expanded=true]{opacity:1;background:var(--p-hl)}
@@ -222,7 +225,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
   .b.paren{margin-left:20%;width:60%}
   .deskarea{padding-block:80px 65vh}
   .type kbd{display:none}
-  .page.cover{padding:24px 16px;aspect-ratio:auto;min-height:45vh;margin-bottom:14px}
+  .page.cover{padding:24px 16px;margin-bottom:14px}
   .pgmark span{right:12px;top:4px;font-size:12px}.pgfirst{right:12px;top:6px;font-size:12px}
 }
 @media (min-width:861px){#menuBtn{display:none}body:not(.focus) .bar{left:306px}}
@@ -318,6 +321,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 </nav>
 <div class="toast" id="toast" role="status"></div>
 <button class="focusExit glassbtn" id="focusExit" type="button">Έξοδος εστίασης</button>
+<button class="fleave" id="fLeave" type="button" aria-label="Έξοδος από την εστίαση" title="Έξοδος από την εστίαση"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 20h8M12 16v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
 <div class="fmenu" id="fmenu">
   <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
@@ -583,9 +587,10 @@ let curType='scene';
 function updateTypes(t){curType=t;[...typesEl.children].forEach(b=>{if(b.dataset.k)b.classList.toggle('on',b.dataset.k===t);});const tt=TYPES.find(x=>x.k===t);$('fLabel').textContent=tt?tt.l.replace(/[()]/g,''):'';}
 const fBtn=$('fBtn'),fPanel=$('fPanel');
 function openF(on){fPanel.hidden=!on;fBtn.setAttribute('aria-expanded',String(on));
-  if(on)fPanel.innerHTML=TYPES.map(t=>`<button type="button" data-k="${t.k}" class="${t.k===curType?'on':''}">${t.l}</button>`).join('')+'<hr><button type="button" data-a="scene">+ Νέα σκηνή</button><button type="button" data-a="exit" class="fexit">Έξοδος από την εστίαση</button>';}
+  if(on)fPanel.innerHTML=TYPES.map(t=>`<button type="button" data-k="${t.k}" class="${t.k===curType?'on':''}">${t.l}</button>`).join('')+'<hr><button type="button" data-a="scene">+ Νέα σκηνή</button>';}
 ['pointerdown','mousedown'].forEach(n=>{fBtn.addEventListener(n,e=>e.preventDefault());fPanel.addEventListener(n,e=>e.preventDefault());});
 fBtn.addEventListener('click',()=>openF(fPanel.hidden));
+$('fLeave').addEventListener('click',()=>setFocus(false));['pointerdown','mousedown'].forEach(n=>$('fLeave').addEventListener(n,e=>e.preventDefault()));
 fPanel.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;openF(false);
   if(b.dataset.a==='exit'){setFocus(false);return;}
   if(b.dataset.a==='scene'){newScene();return;}
