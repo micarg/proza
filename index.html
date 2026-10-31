@@ -163,6 +163,10 @@ button:active{transform:scale(.97)}
 
 /* focus */
 .focusExit{display:none}
+.acttoast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:6px;max-width:calc(100vw - 20px);padding:6px 6px 6px 14px;border-radius:999px;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);box-shadow:var(--hi),0 10px 30px rgba(0,0,0,.45);font-size:14px;color:var(--ink)}
+.acttoast span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acttoast button{flex:0 0 auto;border:0;border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600}
+.acttoast .ok{background:var(--sel-bg);color:var(--sel-ink)}.acttoast .no{background:transparent;color:var(--muted)}
 .sbar{position:fixed;right:calc(3px + env(safe-area-inset-right,0px));width:4px;border-radius:4px;background:rgba(255,255,255,.55);z-index:12;opacity:0;transition:opacity .35s;pointer-events:none}
 .sbar.show{opacity:1;transition:opacity .1s}
 body.paperlight .sbar{background:rgba(0,0,0,.6)}
@@ -303,7 +307,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
       <h3>Εμφάνιση</h3>
       <button class="switch" id="paperBtn" role="switch" aria-checked="false" type="button"><span>Λευκή σελίδα, μαύρα γράμματα</span><span class="knob" aria-hidden="true"></span></button>
       <button class="switch" id="acBtn" role="switch" aria-checked="true" type="button"><span>Αυτόματη διόρθωση στη δράση</span><span class="knob" aria-hidden="true"></span></button>
-      <p class="help">Διορθώνει και βάζει τόνους όταν πατάς κενό. Αν μια διόρθωση δεν σου αρέσει, πάτα αμέσως διαγραφή για να επανέλθει η λέξη σου, και δεν θα την ξαναλλάξει.</p>
+      <p class="help">Διορθώνει και βάζει τόνους όταν πατάς κενό. Αν μια διόρθωση δεν σου αρέσει, πάτα αμέσως διαγραφή για να επανέλθει η λέξη σου. Θα σε ρωτήσει αν θέλεις να μπει στο λεξιλόγιο.</p>
     </div>
     <div class="tools">
       <h3>Το λεξιλόγιό μου <span id="vocabCount" class="vcount"></span></h3>
@@ -733,12 +737,18 @@ const AC=(()=>{
 let vocab=[],vocabT=null;
 try{vocab=JSON.parse(localStorage.getItem('proza-vocab')||'[]').filter(w=>typeof w==='string');}catch(e){}
 function mergeVocab(list,save){let ch=false;list.forEach(w=>{w=String(w).trim();if(w&&!vocab.includes(w)){vocab.push(w);ch=true;if(AC.ready())AC.addWord(w);}});if(ch){renderVocab();if(save!==false)saveVocab();else{try{localStorage.setItem('proza-vocab',JSON.stringify(vocab))}catch(e){}}}}
+const actT=document.createElement('div');actT.className='acttoast';actT.hidden=true;document.body.appendChild(actT);let actTimer=null;
+['pointerdown','mousedown'].forEach(n=>actT.addEventListener(n,e=>e.preventDefault()));
+function askVocab(w){w=(w||'').trim();if(w.length<3||vocab.includes(w)||!/^[A-Za-zΑ-Ωα-ωΆΈΉΊΌΎΏάέήίόύώϊϋΐΰς]+$/.test(w))return;
+  actT.innerHTML=`<span>Να μπει το «${esc(w)}» στο λεξιλόγιο;</span><button type="button" class="ok">Ναι</button><button type="button" class="no">Όχι</button>`;actT.hidden=false;
+  clearTimeout(actTimer);actTimer=setTimeout(()=>{actT.hidden=true;},6000);
+  actT.querySelector('.ok').onclick=()=>{actT.hidden=true;addVocab(w);};actT.querySelector('.no').onclick=()=>{actT.hidden=true;};}
 function addVocab(w){w=(w||'').trim();if(w.length<2||!/^[A-Za-zΑ-Ωα-ωΆΈΉΊΌΎΏάέήίόύώϊϋΐΰς]+$/.test(w))return false;if(vocab.includes(w))return false;mergeVocab([w]);toast('«'+w+'» μπήκε στο λεξιλόγιό σου');return true;}
 function removeVocab(w){vocab=vocab.filter(x=>x!==w);acIgnore.delete(w.toLowerCase());try{localStorage.setItem('proza-ac-ignore',JSON.stringify([...acIgnore]))}catch(e){}renderVocab();saveVocab();if(AC.ready()){AC.build(window.PROZA_DICT.split(' '));vocab.forEach(x=>AC.addWord(x));}}
 function saveVocab(){try{localStorage.setItem('proza-vocab',JSON.stringify(vocab))}catch(e){}
   clearTimeout(vocabT);vocabT=setTimeout(async()=>{if(!remote)return;try{await db.collection('data/users/'+userId).doc('vocab').set({kind:'vocab',words:vocab.slice(-3000)});}catch(e){}},1500);}
 function renderVocab(){const box=$('vocabList');if(!box)return;$('vocabCount').textContent=vocab.length?String(vocab.length):'';
-  box.innerHTML=vocab.length?vocab.slice().reverse().map(w=>`<span class="vchip">${esc(w)}<button type="button" data-w="${esc(w)}" aria-label="Αφαίρεση ${esc(w)}">✕</button></span>`).join(''):'<span class="help">Οι λέξεις που διορθώνεις με το iPhone μπαίνουν εδώ αυτόματα.</span>';}
+  box.innerHTML=vocab.length?vocab.slice().reverse().map(w=>`<span class="vchip">${esc(w)}<button type="button" data-w="${esc(w)}" aria-label="Αφαίρεση ${esc(w)}">✕</button></span>`).join(''):'<span class="help">Εδώ μπαίνουν μόνο λέξεις που εγκρίνεις ή προσθέτεις εσύ.</span>';}
 $('vocabList').addEventListener('click',e=>{const b=e.target.closest('button[data-w]');if(b)removeVocab(b.dataset.w);});
 $('vocabForm').addEventListener('submit',e=>{e.preventDefault();const inp=$('vocabInput');if(addVocab(inp.value))inp.value='';else if(inp.value.trim())toast('Γράψε μία λέξη, μόνο γράμματα');});
 /* when the iPhone replaces a word (tap on a suggestion or on an underlined word), learn the result */
@@ -750,12 +760,11 @@ script.addEventListener('input',ev=>{
   let w=ev.data&&ev.data.trim();
   if(!w){const pos=caret(el);const m=el.textContent.slice(0,pos).replace(/[\s.,;:!?…»)·]+$/,'').match(/([A-Za-zΑ-Ωα-ωΆΈΉΊΌΎΏάέήίόύώϊϋΐΰς]+)$/);w=m&&m[1];}
   if(!w||/\s/.test(w)||w.length<3)return;
-  const explicit=ev.inputType==='insertReplacementText';
-  if(!AC.ready()||(explicit?!AC.known(w):(!AC.correct(w)&&!AC.known(w))))addVocab(w);
+  if(ev.inputType==='insertReplacementText'&&AC.ready()&&!AC.known(w))askVocab(w);
 });
 /* ---------- Greek autocorrect for action lines (dictionary loads on demand) ---------- */
 let acOn=true,acLoading=false,lastCorr=null;const acIgnore=new Set();
-try{acOn=localStorage.getItem('proza-ac')!=='0';JSON.parse(localStorage.getItem('proza-ac-ignore')||'[]').forEach(w=>acIgnore.add(w));}catch(e){}
+try{acOn=localStorage.getItem('proza-ac')!=='0';localStorage.removeItem('proza-ac-ignore');}catch(e){}
 function acLoad(){if(AC.ready()||acLoading||!acOn)return;acLoading=true;
   loadScript('dict.js').then(()=>setTimeout(()=>{try{AC.build(window.PROZA_DICT.split(' '));vocab.forEach(w=>AC.addWord(w));}catch(e){}},30)).catch(()=>{acLoading=false;});}
 script.addEventListener('focusin',()=>{if(acOn)acLoad();});
@@ -776,7 +785,7 @@ script.addEventListener('beforeinput',ev=>{
   ev.preventDefault();const c=lastCorr;lastCorr=null;const t=el.textContent;
   if(t.slice(c.start,c.start+c.fix.length)!==c.fix)return;
   el.textContent=t.slice(0,c.start)+c.original+t.slice(c.start+c.fix.length);place(el,c.start+c.original.length+1);
-  acIgnore.add(c.original.toLowerCase());addVocab(c.original);try{localStorage.setItem('proza-ac-ignore',JSON.stringify([...acIgnore].slice(-500)));}catch(e){}
+  acIgnore.add(c.original.toLowerCase());askVocab(c.original);
   syncEl(el);markDirty(ep());
 });
 script.addEventListener('keydown',ev=>{if(lastCorr&&ev.key!=='Backspace'&&ev.key.length===1&&ev.key!==' ')lastCorr=null;});
