@@ -1071,7 +1071,7 @@ function setPrint(on){printView=on;pvZoom=1;document.body.classList.toggle('prin
 $('printBtn').addEventListener('click',()=>{setPrint(!printView);closeDrawer();});
 $('fPrintClose').addEventListener('click',()=>setPrint(false));
 $('dSave').addEventListener('click',()=>{closeDrawer();doBackup();});
-$('dNewSeries').addEventListener('click',()=>$('addProj').click());
+$('dNewSeries').addEventListener('click',()=>{const g=$('projList').closest('details');g.open=true;$('addProj').click();setTimeout(()=>$('seriesTitle').scrollIntoView({block:'center',behavior:'smooth'}),50);});
 $('dSwitchSeries').addEventListener('click',()=>{const g=$('projList').closest('details');g.open=true;g.scrollIntoView({block:'start',behavior:'smooth'});});
 function setEdit(on,quiet){if(on&&printView)setPrint(false);editing=on;document.body.classList.toggle('reading',!on);$('fEdit').setAttribute('aria-pressed',String(on));$('fEdit').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   script.contentEditable=on?EDIT_CE:'false';coverEl.contentEditable=on?'true':'false';
