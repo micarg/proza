@@ -196,6 +196,9 @@ body.focus .toast{top:calc(env(safe-area-inset-top,0px) + 62px);bottom:auto}
 .dtop{display:flex;flex-direction:column;gap:4px;padding:2px 4px 0}
 .dser{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
 .dtop .dmeta{font-size:13px;color:var(--muted);margin-bottom:10px}
+.dserbtns{display:flex;gap:6px;margin:4px 0 2px}
+.pill{border:.5px solid var(--line);background:var(--fill-2);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600;box-shadow:var(--hi)}
+.pill:hover{background:var(--fill)}
 .qa{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .qbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:68px;border:.5px solid var(--line);border-radius:16px;background:var(--fill-2);color:var(--ink);font-size:12.5px;font-weight:600;box-shadow:var(--hi)}
 .qbtn:hover{background:var(--fill)}
@@ -323,10 +326,11 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
   <aside class="drawer" id="drawer">
     <div class="dtop">
       <div class="dser" id="dSeriesName">Η σειρά μου</div>
+      <div class="dserbtns"><button type="button" class="pill" id="dSwitchSeries">Αλλαγή σειράς</button><button type="button" class="pill" id="dNewSeries">+ Νέα σειρά</button></div>
       <div class="dmeta" id="dMeta"></div>
       <div class="qa">
         <button class="qbtn" id="dSave" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a1 1 0 0 1 1-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 3v5h7V3M8 21v-7h8v7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>Αποθήκευση</span></button>
-        <button class="qbtn" id="printBtn" type="button" role="switch" aria-checked="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11h7M9 14h7M9 17h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Εκτύπωση</span></button>
+        <button class="qbtn" id="printBtn" type="button" role="switch" aria-checked="false" title="Δες το επεισόδιο σε σελίδες Α4, όπως στο PDF"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>Προεπισκόπηση</span></button>
         <button class="qbtn" id="addScene" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Νέα σκηνή</span></button>
       </div>
     </div>
@@ -427,7 +431,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 <div class="fmenu" id="fmenu">
   <button class="fbtn fedit" id="fEdit" type="button" aria-pressed="false" aria-label="Επεξεργασία" title="Επεξεργασία"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m14.5 7.5 3 3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
   <button class="fbtn fclose" id="fZoomOut" type="button" aria-label="Σμίκρυνση">−</button><button class="fbtn fclose" id="fZoomIn" type="button" aria-label="Μεγέθυνση">+</button>
-  <button class="fbtn fclose" id="fPrintClose" type="button">Κλείσιμο προβολής</button>
+  <button class="fbtn fclose" id="fPrintClose" type="button">Κλείσιμο</button>
   <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
   <div class="fpanel" id="fPanel" hidden></div>
@@ -1067,6 +1071,8 @@ function setPrint(on){printView=on;pvZoom=1;document.body.classList.toggle('prin
 $('printBtn').addEventListener('click',()=>{setPrint(!printView);closeDrawer();});
 $('fPrintClose').addEventListener('click',()=>setPrint(false));
 $('dSave').addEventListener('click',()=>{closeDrawer();doBackup();});
+$('dNewSeries').addEventListener('click',()=>$('addProj').click());
+$('dSwitchSeries').addEventListener('click',()=>{const g=$('projList').closest('details');g.open=true;g.scrollIntoView({block:'start',behavior:'smooth'});});
 function setEdit(on,quiet){if(on&&printView)setPrint(false);editing=on;document.body.classList.toggle('reading',!on);$('fEdit').setAttribute('aria-pressed',String(on));$('fEdit').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   script.contentEditable=on?EDIT_CE:'false';coverEl.contentEditable=on?'true':'false';
   $('editBtn').setAttribute('aria-pressed',String(on));$('editBtn').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
