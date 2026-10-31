@@ -519,7 +519,7 @@ function setType(el,t){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].t=t;cons
 
 script.addEventListener('keydown',ev=>{
   const el=cur();if(!el)return;const e=ep(),i=idx(el),b=e.blocks[i];
-  if((ev.key==='Enter'||ev.keyCode===13)&&!ev.shiftKey){
+  if((ev.key==='Enter'||ev.keyCode===13)&&!ev.shiftKey&&!TOUCH){
     ev.preventDefault();enterLock=true;setTimeout(()=>{enterLock=false;},60);const sp=selSpan();if(sp&&sp.multi){const el2=deleteSpan(sp);doEnter(el2,sp.a.off,sp.a.off);return;}doEnter(el);return;
   }
   if(ev.key==='Tab'){ev.preventDefault();const k=TK.indexOf(b.t);setType(el,TK[(k+(ev.shiftKey?TK.length-1:1))%TK.length]);return;}
@@ -571,6 +571,7 @@ function reconcile(){const e=ep();const out=[];
     if(subs.length){let first='';n.childNodes.forEach(c=>{if(c.nodeType===3)first+=c.textContent;});out.push({t,x:first});subs.forEach(d=>out.push({t:NEXT[t]||'action',x:d.textContent}));}
     else out.push({t,x:n.textContent.replace(/\n/g,' ')});}
   if(!out.length)out.push({t:'scene',x:''});e.blocks=out;renderScript();const last=script.lastElementChild;if(last)place(last,last.textContent.length);markDirty(e);}
+const TOUCH=matchMedia('(pointer:coarse)').matches;let enterGuard=null;
 let enterLock=false;
 function doEnter(el,a,z){
   const e=ep(),i=idx(el);if(i<0)return;const b=e.blocks[i];
@@ -581,6 +582,8 @@ function doEnter(el,a,z){
   const nt=after.trim()?b.t:NEXT[b.t];
   b.x=before;el.textContent=before;
   const nb={t:nt,x:after};e.blocks.splice(i+1,0,nb);const n=mk(nb);el.after(n);place(n,0);
+  enterGuard={from:el,to:n,fromText:el.textContent,t:Date.now()};
+  requestAnimationFrame(()=>{if(n.isConnected&&cur()!==n&&cur()===el)place(n,0);});setTimeout(()=>{if(n.isConnected&&cur()===el&&el.textContent===enterGuard?.fromText)place(n,0);},60);
   markDirty(e);updateSide();onFocusChange();
 }
 /* iOS / Android keyboards often skip keydown for Return: catch it before and after it is inserted */
@@ -590,6 +593,13 @@ script.addEventListener('beforeinput',ev=>{
 });
 script.addEventListener('input',ev=>{
   if(!structureOk()){reconcile();return;}
+  if(enterGuard){const g=enterGuard;const c=cur();
+    if(Date.now()-g.t>2500||!g.to.isConnected||!g.from.isConnected||c===g.to)enterGuard=null;
+    else if(c===g.from){const t=g.from.textContent;
+      if(ev.inputType==='insertReplacementText'||!t.startsWith(g.fromText)){g.fromText=t;syncEl(g.from);}
+      else if(t.length>g.fromText.length&&caret(g.from)===t.length){const extra=t.slice(g.fromText.length);
+        g.from.textContent=g.fromText;fixEmpty(g.from);syncEl(g.from);
+        const nt=extra+g.to.textContent;g.to.textContent=nt;fixEmpty(g.to);syncEl(g.to);place(g.to,extra.length);markDirty(ep());updateChips();return;}}}
   const el=cur();if(!el)return;
   if(ev.inputType==='insertParagraph'||ev.inputType==='insertLineBreak'){
     const raw=el.innerText!==undefined&&el.querySelector('br,div')?el.innerText:el.textContent;const k=raw.indexOf('\n');
