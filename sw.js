@@ -1,6 +1,6 @@
 // Proza offline cache. The app page and its scripts always come fresh from the network when online
 // (bypassing the browser cache), and from this cache when offline.
-const CACHE='proza-v14';
+const CACHE='proza-v15';
 const CORE=['./','index.html','manifest.webmanifest','fonts.js','dict.js','icon-180.png','icon-192.png','icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js','https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>fetch(u,{cache:'no-store'}).then(r=>c.put(u,r)).catch(()=>{})))).then(()=>self.skipWaiting()));});

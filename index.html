@@ -110,7 +110,7 @@ button:active{transform:scale(.97)}
 .b{outline:none;white-space:pre-wrap;word-wrap:break-word;min-height:1.2em;position:relative;border-radius:3px;caret-color:var(--p-ink)}
 .b.cur{background:var(--p-hl)}
 #script{outline:none;-webkit-user-select:text;user-select:text}
-.b:empty::before{content:attr(data-ph);color:var(--p-muted);opacity:.7;font-style:italic;text-transform:none;pointer-events:none}
+.b.empty::before{content:attr(data-ph);color:var(--p-muted);opacity:.7;font-style:italic;text-transform:none;pointer-events:none}
 .b.scene{text-transform:uppercase;font-weight:700;margin-top:3.6em;counter-increment:scene}
 .b.scene::after{content:"ΣΚΗΝΗ " counter(scene);position:absolute;left:0;top:-1.2em;color:var(--p-label);font-weight:700;letter-spacing:.04em;font-style:normal;pointer-events:none}
 #script>.b.scene:first-child{margin-top:1.2em}
@@ -118,8 +118,8 @@ button:active{transform:scale(.97)}
 .b.character{text-transform:uppercase;margin-top:1.2em;margin-left:33%;width:60%}
 .b.dialogue{margin-left:17%;width:58%}
 .b.paren{margin-left:25%;width:40%}
-.b.paren:not(:empty)::before{content:"("}
-.b.paren:not(:empty)::after{content:")"}
+.b.paren:not(.empty)::before{content:"("}
+.b.paren:not(.empty)::after{content:")"}
 .b.transition{text-transform:uppercase;text-align:right;margin-top:1.2em}
 #script>.b:first-child{margin-top:0}
 .loading{font-family:var(--ui);color:var(--p-muted);font-size:14px;padding:20px 0}
@@ -476,7 +476,11 @@ const script=$('script');
 try{script.contentEditable='plaintext-only';if(script.contentEditable!=='plaintext-only')script.contentEditable='true';}catch(e){script.contentEditable='true';}
 script.setAttribute('autocorrect','off');script.setAttribute('autocapitalize','sentences');script.setAttribute('autocomplete','off');script.spellcheck=true;
 const ep=()=>S.eps.find(e=>e.id===S.cur);
-function mk(b){const d=document.createElement('div');d.className='b '+b.t;d.dataset.ph=PH[b.t];d.textContent=b.x;
+/* an empty line keeps a <br> so the iPhone can put the cursor inside it (otherwise it jumps to the line above) */
+function fixEmpty(el){if(!el||el.nodeType!==1)return;const empty=el.textContent==='';
+  if(empty){if(!el.querySelector('br'))el.appendChild(document.createElement('br'));}else el.querySelectorAll('br').forEach(b=>b.remove());
+  el.classList.toggle('empty',empty);}
+function mk(b){const d=document.createElement('div');d.className='b '+b.t;d.dataset.ph=PH[b.t];d.textContent=b.x;fixEmpty(d);
   applyCorrect(d,b.t);return d;}
 function applyCorrect(d,t){const on=t==='action';d.spellcheck=on;d.setAttribute('autocorrect',on?'on':'off');d.setAttribute('autocapitalize',t==='action'||t==='dialogue'?'sentences':t==='paren'?'none':'characters');d.setAttribute('autocomplete','off');}
 const coverEl=$('coverTitle');
@@ -489,13 +493,13 @@ function idx(el){return Array.prototype.indexOf.call(script.children,el);}
 function cur(){const s=getSelection();if(!s.rangeCount)return null;let n=s.anchorNode;while(n&&n!==script){if(n.parentNode===script)return n;n=n.parentNode;}return null;}
 function caret(el){const s=getSelection();if(!s.rangeCount)return 0;const r=s.getRangeAt(0),pre=r.cloneRange();pre.selectNodeContents(el);pre.setEnd(r.startContainer,r.startOffset);return pre.toString().length;}
 function caretEnd(el){const s=getSelection();if(!s.rangeCount)return 0;const r=s.getRangeAt(0),pre=r.cloneRange();pre.selectNodeContents(el);pre.setEnd(r.endContainer,r.endOffset);return pre.toString().length;}
-function place(el,off){if(document.activeElement!==script)script.focus({preventScroll:true});const s=getSelection(),r=document.createRange();let n=el.firstChild;
+function place(el,off){for(const c of script.children)fixEmpty(c);if(document.activeElement!==script)script.focus({preventScroll:true});const s=getSelection(),r=document.createRange();let n=el.firstChild;
   if(!n){r.setStart(el,0);}else{let rem=off;const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);let t,ok=false;while((t=w.nextNode())){if(rem<=t.length){r.setStart(t,rem);ok=true;break;}rem-=t.length;}if(!ok){r.selectNodeContents(el);r.collapse(false);}}
   r.collapse(true);s.removeAllRanges();s.addRange(r);
   requestAnimationFrame(keepCaret);}
 function syncEl(el){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].x=el.textContent.replace(/\n+$/,'');}
 function syncAll(){const e=ep();if(!e)return;[...script.children].forEach((el,i)=>{if(e.blocks[i])e.blocks[i].x=el.textContent;});}
-function setType(el,t){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].t=t;el.className='b '+t;el.dataset.ph=PH[t];
+function setType(el,t){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].t=t;const wasCur=el.classList.contains('cur');el.className='b '+t+(wasCur?' cur':'');fixEmpty(el);el.dataset.ph=PH[t];
   applyCorrect(el,t);
   if(t==='paren')el.textContent=el.textContent.replace(/^\(|\)$/g,'');updateTypes(t);markDirty(e);updateSide();updateChips();}
 
@@ -579,7 +583,7 @@ script.addEventListener('input',ev=>{
     if(k>=0){el.textContent=raw.replace(/\n/g,'');}
   }
   syncEl(el);const e=ep(),i=idx(el),b=e.blocks[i];
-  if(el.querySelector('br,div')){const t=el.textContent;el.textContent=t;place(el,t.length);}
+  if(el.querySelector('div')){const t=el.textContent;el.textContent=t;place(el,t.length);}else{const had=el.classList.contains('empty');fixEmpty(el);if(had&&el.textContent==='')place(el,0);}
   if(b.t==='action'&&SCENE_RE.test(b.x)&&!/\s{2}/.test(b.x)){setType(el,'scene');}
   else if(b.t==='dialogue'&&b.x==='('){el.textContent='';b.x='';setType(el,'paren');place(el,0);}
   else if(b.t==='paren'&&/^\(|\)$/.test(b.x)){const o=caret(el);const t=b.x.replace(/^\(/,'').replace(/\)$/,'');el.textContent=t;b.x=t;place(el,Math.max(0,Math.min(t.length,o-1)));}
