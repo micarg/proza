@@ -260,7 +260,12 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 <div class="shell">
   <aside class="drawer" id="drawer">
     <div>
-      <h3><label for="seriesTitle">Σειρά</label></h3>
+      <h3>Σειρές</h3>
+      <div class="list" id="projList"></div>
+      <button class="add" id="addProj" style="margin-top:6px;width:100%">+ Νέα σειρά</button>
+    </div>
+    <div>
+      <h3><label for="seriesTitle">Τίτλος σειράς</label></h3>
       <input id="seriesTitle" value="Η σειρά μου">
     </div>
     <div>
@@ -301,6 +306,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
       <button class="iconbtn" id="copyTxt">Αντιγραφή όλου του σεναρίου</button>
       <label class="iconbtn" for="importFile" style="cursor:pointer">Εισαγωγή από .txt / .fountain</label>
       <input type="file" id="importFile" accept=".txt,.fountain,text/plain" hidden>
+      <div id="delProjWrap"><button class="iconbtn danger" id="delProj">Διαγραφή σειράς</button></div>
       <div id="delWrap"><button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button></div>
     </div>
     <div class="help">
@@ -369,13 +375,18 @@ const SAMPLE=[
  {t:'action',x:''}
 ];
 
-let S={series:'Η σειρά μου',eps:[],cur:null};
+let S={id:'main',series:'Η σειρά μου',eps:[],cur:null};
+let PROJ=[S],ACT='main';const deletedProj=new Set();
 let db=null,userId=null,remote=false,isExample=false;
 const dirty=new Set(); let seriesDirty=false,saveTimer=null,saving=false;
 
 /* ---------- storage ---------- */
-function localSave(){try{localStorage.setItem('scr-v1',JSON.stringify(S))}catch(e){}}
-function localLoad(){try{const s=JSON.parse(localStorage.getItem('scr-v1')||'null');if(s&&Array.isArray(s.eps))return s;}catch(e){}return null;}
+function localSave(){try{localStorage.setItem('proza-projects',JSON.stringify({active:ACT,example:isExample,projects:PROJ.map(p=>({id:p.id,series:p.series,eps:p.eps,cur:p.cur}))}))}catch(e){}}
+function localLoad(){try{const d=JSON.parse(localStorage.getItem('proza-projects')||'null');if(d&&Array.isArray(d.projects)&&d.projects.length)return d;}catch(e){}
+  try{const s=JSON.parse(localStorage.getItem('scr-v1')||'null');if(s&&Array.isArray(s.eps))return {active:'main',example:!!s.example,projects:[{id:'main',series:s.series||'Η σειρά μου',eps:s.eps,cur:s.cur}]};}catch(e){}return null;}
+const allEps=()=>PROJ.flatMap(p=>p.eps);
+const projOf=id=>PROJ.find(p=>p.eps.some(e=>e.id===id));
+const seriesDocId=pid=>pid==='main'?'series':'series-'+pid;
 function setSaveState(t,warn){const el=$('saveState');el.textContent=t;el.classList.toggle('warn',!!warn);}
 function markDirty(ep){if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSave();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
 async function flush(){
@@ -384,12 +395,14 @@ async function flush(){
   saving=true;setSaveState('Αποθήκευση…');
   try{
     const col=db.collection('data/users/'+userId);
-    if(seriesDirty){seriesDirty=false;await col.doc('series').set({kind:'series',title:S.series,order:S.eps.map(e=>e.id)});}
+    if(seriesDirty){seriesDirty=false;
+      for(const pr of PROJ)await col.doc(seriesDocId(pr.id)).set({kind:'series',pid:pr.id,title:pr.series,order:pr.eps.map(e=>e.id),created:pr.created||0});
+      for(const pid of [...deletedProj]){deletedProj.delete(pid);await col.doc(seriesDocId(pid)).delete();}}
     for(const id of [...dirty]){
       dirty.delete(id);
-      const ep=S.eps.find(e=>e.id===id);
+      const ep=allEps().find(e=>e.id===id);
       if(!ep){await col.doc(id).delete();continue;}
-      const body={kind:'ep',title:ep.title,cover:ep.cover==null?null:ep.cover,blocks:ep.blocks,updated:ep.updated};
+      const body={kind:'ep',pid:(projOf(id)||{id:'main'}).id,title:ep.title,cover:ep.cover==null?null:ep.cover,blocks:ep.blocks,updated:ep.updated};
       if(JSON.stringify(body).length>240000){setSaveState('Πολύ μεγάλο επεισόδιο',true);toast('Το επεισόδιο είναι πολύ μεγάλο για αποθήκευση στον λογαριασμό. Χώρισέ το σε δύο.');continue;}
       await col.doc(id).set(body);
     }
@@ -397,7 +410,7 @@ async function flush(){
   }catch(e){
     setSaveState('Δεν αποθηκεύτηκε',true);
     if(e&&e.code==='quota_exceeded')toast('Γέμισε ο χώρος αποθήκευσης. Σβήσε κάποιο παλιό επεισόδιο.');
-    else{S.eps.forEach(x=>dirty.add(x.id));seriesDirty=true;setTimeout(flush,4000+Math.random()*2000);}
+    else{allEps().forEach(x=>dirty.add(x.id));seriesDirty=true;setTimeout(flush,4000+Math.random()*2000);}
   }finally{saving=false;}
   if(dirty.size||seriesDirty){clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
 }
@@ -421,24 +434,31 @@ async function boot(){
       if(r==='timeout'){setSaveState('Χωρίς σύνδεση · τοπικά',true);}
       else if(r){
         remote=true;
-        let series=null;const eps=[];
-        r.docs.forEach(doc=>{const v=doc.data();if(!v)return;if(v.kind==='vocab'&&Array.isArray(v.words))mergeVocab(v.words,false);if(v.kind==='series')series=v;else if(v.kind==='ep')eps.push({id:doc.id,title:v.title||'Επεισόδιο',cover:typeof v.cover==='string'?v.cover:null,blocks:Array.isArray(v.blocks)?v.blocks.map(b=>({t:TK.includes(b.t)?b.t:'action',x:String(b.x||'')})):[],updated:v.updated||0});});
-        if(eps.length){
-          const order=series&&Array.isArray(series.order)?series.order:[];
-          eps.sort((a,b)=>{const ia=order.indexOf(a.id),ib=order.indexOf(b.id);return (ia<0?1e9:ia)-(ib<0?1e9:ib)||a.updated-b.updated;});
-          loaded={series:series?series.title:'Η σειρά μου',eps,cur:eps[0].id};
-          try{const lc=local&&local.cur;if(lc&&eps.some(e=>e.id===lc))loaded.cur=lc;}catch(e){}
-        }else if(local&&local.eps.length&&!(local.eps.length===1&&local.example)){
-          loaded=local; local.eps.forEach(e=>dirty.add(e.id)); seriesDirty=true;
+        const metas={},byP={};
+        r.docs.forEach(doc=>{const v=doc.data();if(!v)return;if(v.kind==='vocab'&&Array.isArray(v.words))mergeVocab(v.words,false);
+          if(v.kind==='series'){metas[v.pid||'main']=v;}
+          else if(v.kind==='ep'){const pid=v.pid||'main';(byP[pid]=byP[pid]||[]).push({id:doc.id,title:v.title||'Επεισόδιο',cover:typeof v.cover==='string'?v.cover:null,blocks:Array.isArray(v.blocks)?v.blocks.map(b=>({t:TK.includes(b.t)?b.t:'action',x:String(b.x||'')})):[],updated:v.updated||0});}});
+        const pids=Object.keys(byP);
+        if(pids.length){
+          const projects=pids.map(pid=>{const m=metas[pid]||{};const order=Array.isArray(m.order)?m.order:[];const eps=byP[pid];
+            eps.sort((a,b)=>{const ia=order.indexOf(a.id),ib=order.indexOf(b.id);return (ia<0?1e9:ia)-(ib<0?1e9:ib)||a.updated-b.updated;});
+            const lp=local&&local.projects.find(x=>x.id===pid);const cur=lp&&eps.some(e=>e.id===lp.cur)?lp.cur:eps[0].id;
+            return {id:pid,series:m.title||'Η σειρά μου',eps,cur,created:m.created||0};});
+          projects.sort((a,b)=>(a.id==='main'?-1:b.id==='main'?1:(a.created||0)-(b.created||0)));
+          loaded={projects,active:local&&projects.some(x=>x.id===local.active)?local.active:projects[0].id};
+        }else if(local&&local.projects.some(p=>p.eps.length)&&!local.example){
+          loaded=local;local.projects.forEach(p=>p.eps.forEach(e=>dirty.add(e.id)));seriesDirty=true;
         }
       }
     }
   }catch(e){}
-  if(!loaded&&local&&local.eps.length&&!remote)loaded=local;
-  if(loaded){S={series:loaded.series,eps:loaded.eps,cur:loaded.cur||loaded.eps[0].id};}
+  if(!loaded&&local&&!remote){loaded=local;if(local.example&&local.projects.length===1){isExample=true;$('exampleNote').hidden=false;}}
+  if(loaded){PROJ=loaded.projects.map(p=>({id:p.id,series:p.series||'Η σειρά μου',eps:(p.eps&&p.eps.length)?p.eps:[{id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()}],cur:p.cur,created:p.created||0}));
+    PROJ.forEach(p=>{if(!p.eps.some(e=>e.id===p.cur))p.cur=p.eps[0].id;});
+    S=PROJ.find(p=>p.id===loaded.active)||PROJ[0];ACT=S.id;}
   else{
     const ep={id:uid(),title:'Επεισόδιο 1',blocks:SAMPLE.map(b=>({...b})),updated:Date.now()};
-    S={series:'Η σειρά μου',eps:[ep],cur:ep.id};isExample=true;$('exampleNote').hidden=false;
+    S={id:'main',series:'Η σειρά μου',eps:[ep],cur:ep.id};PROJ=[S];ACT='main';isExample=true;$('exampleNote').hidden=false;
   }
   setSaveState(remote?(dirty.size?'Αλλαγές…':'Αποθηκεύτηκε'):(saveTimerState()));
   if(dirty.size||seriesDirty)flush();
@@ -861,6 +881,10 @@ $('bkConfirm').addEventListener('click',e=>{
   if(e.target.id==='bkNo'){bkPending=null;$('bkConfirm').innerHTML='';return;}
   if(e.target.id!=='bkYes'||!bkPending)return;
   syncAll();const d=bkPending;bkPending=null;let added=0,firstId=null;
+  if(d.series&&d.series!==S.series&&!(S.eps.length===1&&!S.eps[0].blocks.some(b=>b.x.trim()))){
+    let p=PROJ.find(x=>x.series===d.series);
+    if(!p){p={id:'p'+Date.now().toString(36),series:d.series,eps:[],cur:null,created:Date.now()};PROJ.push(p);}
+    S=p;ACT=p.id;}
   d.episodes.forEach(x=>{if(!x||!Array.isArray(x.blocks))return;
     const blocks=x.blocks.map(b=>({t:TK.includes(b&&b.t)?b.t:'action',x:String((b&&b.x)||'')}));
     const ex=S.eps.find(e=>e.id===x.id);
@@ -868,7 +892,8 @@ $('bkConfirm').addEventListener('click',e=>{
     const ne={id:ex||!x.id?uid():x.id,title:(x.title||'Επεισόδιο')+(ex?' (από αντίγραφο)':''),cover:x.cover==null?null:x.cover,blocks,updated:Date.now()};
     S.eps.push(ne);dirty.add(ne.id);added++;if(!firstId)firstId=ne.id;});
   if(Array.isArray(d.vocab))mergeVocab(d.vocab);
-  if((!S.series||S.series==='Η σειρά μου')&&d.series)S.series=d.series;
+  if((!S.series||S.series==='Η σειρά μου'||/^Νέα σειρά/.test(S.series))&&d.series)S.series=d.series;
+  if(!S.eps.length){PROJ=PROJ.filter(x=>x.eps.length);S=PROJ[0];ACT=S.id;$('bkConfirm').innerHTML='';toast('Το αντίγραφο δεν είχε επεισόδια');return;}
   $('bkConfirm').innerHTML='';
   if(!added){toast('Όλα τα επεισόδια του αντιγράφου υπάρχουν ήδη');return;}
   seriesDirty=true;S.cur=firstId;markDirty(null);renderScript();setEdit(false,true);closeDrawer();toast('Επανήλθαν '+added+' επεισόδια');});
@@ -897,8 +922,24 @@ script.addEventListener('focusin',()=>{clearTimeout(edT);document.body.classList
 script.addEventListener('focusout',()=>{clearTimeout(edT);edT=setTimeout(()=>{if(!script.contains(document.activeElement))document.body.classList.remove('editing');},150);});
 
 /* ---------- side panels ---------- */
+function renderProjects(){const box=$('projList');if(!box)return;
+  box.innerHTML=PROJ.map(p=>`<button class="item ${p.id===ACT?'on':''}" data-pid="${p.id}"><span class="tx">${esc(p.series||'Χωρίς τίτλο')}</span><span class="c">${p.eps.length} επ.</span></button>`).join('');}
+function switchProject(pid){const p=PROJ.find(x=>x.id===pid);if(!p||p===S)return;syncAll();S=p;ACT=p.id;isExample=false;$('exampleNote').hidden=true;localSave();renderScript();setEdit(false,true);bkRefresh();}
+$('projList').addEventListener('click',ev=>{const b=ev.target.closest('[data-pid]');if(!b)return;switchProject(b.dataset.pid);resetDelProj();});
+$('addProj').addEventListener('click',()=>{syncAll();const e={id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()};
+  const p={id:'p'+Date.now().toString(36),series:'Νέα σειρά '+(PROJ.length+1),eps:[e],cur:e.id,created:Date.now()};PROJ.push(p);
+  S=p;ACT=p.id;isExample=false;$('exampleNote').hidden=true;seriesDirty=true;markDirty(e);renderScript();setEdit(true,true);
+  const inp=$('seriesTitle');inp.focus();inp.select();toast('Νέα σειρά: δώσε της τίτλο');});
+function resetDelProj(){$('delProjWrap').innerHTML='<button class="iconbtn danger" id="delProj">Διαγραφή σειράς</button>';}
+$('delProjWrap').addEventListener('click',ev=>{
+  if(ev.target.id==='delProj'){$('delProjWrap').innerHTML=`<div class="confirm"><span>Διαγραφή όλης της σειράς «${esc(S.series)}» με ${S.eps.length} επεισόδια; Δεν αναιρείται.</span><button class="yes" id="delProjYes">Διαγραφή</button><button id="delProjNo">Άκυρο</button></div>`;}
+  else if(ev.target.id==='delProjNo')resetDelProj();
+  else if(ev.target.id==='delProjYes'){const gone=S;gone.eps.forEach(e=>dirty.add(e.id));PROJ=PROJ.filter(p=>p!==gone);deletedProj.add(gone.id);
+    if(!PROJ.length){const e={id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()};PROJ=[{id:'p'+Date.now().toString(36),series:'Η σειρά μου',eps:[e],cur:e.id,created:Date.now()}];dirty.add(e.id);}
+    S=PROJ[0];ACT=S.id;seriesDirty=true;markDirty(null);renderScript();setEdit(false,true);resetDelProj();toast('Η σειρά διαγράφηκε');}
+});
 function updateSide(){
-  const e=ep();if(!e)return;
+  const e=ep();if(!e)return;renderProjects();
   $('epTitle').value=e.title;$('seriesLabel').textContent=S.series||'Η σειρά μου';
   if(document.activeElement!==$('seriesTitle'))$('seriesTitle').value=S.series;
   $('epList').innerHTML=S.eps.map((x,i)=>`<button class="item ${x.id===S.cur?'on':''}" data-id="${x.id}"><span class="n">${i+1}</span><span class="tx">${esc(x.title||'Χωρίς τίτλο')}</span></button>`).join('');
