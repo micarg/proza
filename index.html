@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
-<style>:root{color-scheme:dark;background:#000}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}html{-webkit-text-size-adjust:100%}</style>
+<style>html{color-scheme:dark;background:#000}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}html{-webkit-text-size-adjust:100%}</style>
 </head>
 <body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,6 +34,7 @@ body.paperlight,html.paperlight{--p-bg:#ffffff; --p-ink:#000000; --p-muted:#8a8a
 *{box-sizing:border-box}
 html{position:fixed;inset:0;height:auto;min-height:100%;overflow:hidden;background:var(--p-bg);}
 html.kbd{bottom:auto;min-height:0;height:var(--vvh,100%)}
+:root{background:var(--p-bg)}
 html{overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
 body{height:100%;overflow:hidden;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);max-width:100vw;overscroll-behavior:none}
 body:not(.printview){touch-action:pan-y}
@@ -231,7 +232,8 @@ body.focus .toast{top:calc(env(safe-area-inset-top,0px) + 62px);bottom:auto}
 body.reading .urbtn{opacity:.2;pointer-events:none}
 body.focus{background:var(--p-bg)}
 body.focus::before{background:var(--p-bg);backdrop-filter:none;-webkit-backdrop-filter:none}
-body.focus .top,body.focus .example,body.focus .page.cover{display:none!important}
+body.focus .top,body.focus .page.cover{display:none!important}
+body.focus .example[hidden]{display:none!important}
 body.focus .pgmark{border-top-color:transparent}
 body.focus .pgmark span,body.focus .pgfirst{opacity:.55}
 body.focus .bar,body.focus .focusExit{display:none!important}
@@ -483,7 +485,10 @@ const allEps=()=>PROJ.flatMap(p=>p.eps);
 const projOf=id=>PROJ.find(p=>p.eps.some(e=>e.id===id));
 const seriesDocId=pid=>pid==='main'?'series':'series-'+pid;
 function setSaveState(t,warn){const el=$('saveState');el.textContent=t;el.classList.toggle('warn',!!warn);const d=$('dMeta');if(d)d.textContent=($('pages').textContent||'')+' · '+t;}
-function markDirty(ep){if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSave();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
+let lsT=null;function localSaveSoon(){clearTimeout(lsT);lsT=setTimeout(()=>{lsT=null;localSave();},400);}
+function localSaveNow(){if(lsT){clearTimeout(lsT);lsT=null;}syncAll();localSave();}
+addEventListener('pagehide',localSaveNow);
+function markDirty(ep){if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSaveSoon();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
 async function flush(){
   if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(flush,600);return;}
   if(!remote){setSaveState('Σε αυτή τη συσκευή');return;}
@@ -509,7 +514,7 @@ async function flush(){
   }finally{saving=false;}
   if(dirty.size||seriesDirty){clearTimeout(saveTimer);saveTimer=setTimeout(flush,800);}
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){syncAll();if(dirty.size||seriesDirty)flush();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'){localSaveNow();if(dirty.size||seriesDirty)flush();}});
 
 async function boot(){
   const local=localLoad();
@@ -596,7 +601,7 @@ function setType(el,t){const e=ep(),i=idx(el);if(i<0)return;e.blocks[i].t=t;cons
 script.addEventListener('keydown',ev=>{
   const el=cur();if(!el)return;const e=ep(),i=idx(el),b=e.blocks[i];
   if((ev.key==='Enter'||ev.keyCode===13)&&!ev.shiftKey&&!TOUCH){
-    ev.preventDefault();enterLock=true;setTimeout(()=>{enterLock=false;},60);const sp=selSpan();if(sp&&sp.multi){const el2=deleteSpan(sp);doEnter(el2,sp.a.off,sp.a.off);return;}doEnter(el);return;
+    ev.preventDefault();const sp=selSpan();if(sp&&sp.multi){const el2=deleteSpan(sp);doEnter(el2,sp.a.off,sp.a.off);return;}doEnter(el);return;
   }
   if(ev.key==='Tab'){ev.preventDefault();const k=TK.indexOf(b.t);setType(el,TK[(k+(ev.shiftKey?TK.length-1:1))%TK.length]);return;}
   if((ev.ctrlKey||ev.metaKey)&&/^[1-6]$/.test(ev.key)){ev.preventDefault();setType(el,TK[+ev.key-1]);return;}
@@ -648,7 +653,11 @@ function reconcile(){const e=ep();const out=[];
     else out.push({t,x:n.textContent.replace(/\n/g,' ')});}
   if(!out.length)out.push({t:'scene',x:''});e.blocks=out;renderScript();const last=script.lastElementChild;if(last)place(last,last.textContent.length);markDirty(e);}
 const TOUCH=matchMedia('(pointer:coarse)').matches;let enterGuard=null;
-let enterLock=false;
+let lastEnterAt=-1e9;
+/* right after Enter, if the iPhone keyboard puts the cursor back at the end of the previous line, move it into the new line */
+document.addEventListener('selectionchange',()=>{const g=enterGuard;if(!g||Date.now()-g.t>600||!g.to.isConnected)return;
+  const s=getSelection();if(!s.rangeCount||!s.getRangeAt(0).collapsed)return;
+  if(cur()===g.from&&g.from.textContent===g.fromText&&caret(g.from)===g.from.textContent.length)place(g.to,0);});
 function doEnter(el,a,z){
   const e=ep(),i=idx(el);if(i<0)return;const b=e.blocks[i];
   const text=el.textContent.replace(/\n/g,'');if(a==null){a=caret(el);z=caretEnd(el);}
@@ -665,7 +674,7 @@ function doEnter(el,a,z){
 /* iOS / Android keyboards often skip keydown for Return: catch it before and after it is inserted */
 script.addEventListener('beforeinput',ev=>{
   if(ev.inputType!=='insertParagraph'&&ev.inputType!=='insertLineBreak')return;
-  ev.preventDefault();if(enterLock)return;const el=cur();if(el){enterLock=true;setTimeout(()=>{enterLock=false;},60);doEnter(el);}
+  ev.preventDefault();const el=cur();if(el){lastEnterAt=performance.now();doEnter(el);}
 });
 script.addEventListener('input',ev=>{
   if(!structureOk()){reconcile();return;}
@@ -679,7 +688,7 @@ script.addEventListener('input',ev=>{
   const el=cur();if(!el)return;
   if(ev.inputType==='insertParagraph'||ev.inputType==='insertLineBreak'){
     const raw=el.innerText!==undefined&&el.querySelector('br,div')?el.innerText:el.textContent;const k=raw.indexOf('\n');
-    if(k>=0&&!enterLock){const clean=raw.slice(0,k)+raw.slice(k+1).replace(/\n/g,'');el.textContent=clean;enterLock=true;setTimeout(()=>{enterLock=false;},60);doEnter(el,k,k);return;}
+    if(k>=0&&performance.now()-lastEnterAt>40){const clean=raw.slice(0,k)+raw.slice(k+1).replace(/\n/g,'');el.textContent=clean;lastEnterAt=performance.now();doEnter(el,k,k);return;}
     if(k>=0){el.textContent=raw.replace(/\n/g,'');}
   }
   syncEl(el);const e=ep(),i=idx(el),b=e.blocks[i];
@@ -699,10 +708,9 @@ script.addEventListener('paste',ev=>{
   syncEl(el);const e=ep(),i=idx(el),a=caret(el),z=caretEnd(el),b=e.blocks[i];
   const before=b.x.slice(0,a),after=b.x.slice(z);
   const parsed=parseFountain(text);if(!parsed.length)return;
-  let ins=parsed;
-  if(before.trim()===''&&after.trim()===''){e.blocks.splice(i,1,...ins);}
-  else{b.x=before;e.blocks.splice(i+1,0,...ins);if(after.trim())e.blocks.splice(i+1+ins.length,0,{t:b.t,x:after});}
-  renderScript();const target=script.children[Math.min(e.blocks.length-1,i+ins.length-(before.trim()||after.trim()?0:1))];if(target)place(target,target.textContent.length);
+  const rep=[];if(before.trim())rep.push({t:b.t,x:before});rep.push(...parsed);if(after.trim())rep.push({t:b.t,x:after});
+  e.blocks.splice(i,1,...rep);renderScript();
+  const target=script.children[i+(before.trim()?1:0)+parsed.length-1];if(target)place(target,target.textContent.length);
   markDirty(e);
 });
 document.addEventListener('selectionchange',()=>{const el=cur();const s=getSelection();const col=!!(s.rangeCount&&s.getRangeAt(0).collapsed);
@@ -972,7 +980,7 @@ function histPush(){clearTimeout(histT);histT=null;if(restoring||!ep())return;if
   const sn=snap(),last=hist[hp];if(last&&same(last.blocks,sn.blocks)){last.bi=sn.bi;last.off=sn.off;return;}
   hist=hist.slice(0,hp+1);hist.push(sn);if(hist.length>200)hist.shift();hp=hist.length-1;updUR();}
 function scheduleHist(){if(restoring)return;clearTimeout(histT);const last=hist[hp],e=ep();
-  if(last&&e&&last.blocks.length!==e.blocks.length){histT=setTimeout(histPush,0);return;}histT=setTimeout(histPush,600);}
+  if(last&&e&&last.blocks.length!==e.blocks.length){histPush();return;}histT=setTimeout(histPush,600);}
 function restore(sn){restoring=true;const e=ep();syncAll();e.blocks=sn.blocks.map(b=>({t:b.t,x:b.x}));renderScript();
   const el=script.children[Math.max(0,Math.min(sn.bi<0?e.blocks.length-1:sn.bi,e.blocks.length-1))];if(el)place(el,Math.min(sn.off,el.textContent.length));
   markDirty(e);restoring=false;updUR();}
@@ -1119,7 +1127,7 @@ function updateSide(){
   $('epList').innerHTML=S.eps.map((x,i)=>`<button class="item ${x.id===S.cur?'on':''}" data-id="${x.id}"><span class="n">${i+1}</span><span class="tx">${esc(x.title||'Χωρίς τίτλο')}</span></button>`).join('');
   let n=0;const sc=[];e.blocks.forEach((b,i)=>{if(b.t==='scene'){n++;sc.push(`<button class="item" data-b="${i}"><span class="n">${n}</span><span class="tx">${esc(up(b.x)||'Νέα σκηνή')}</span></button>`);}});
   $('sceneList').innerHTML=sc.join('')||'<span class="help">Δεν υπάρχουν σκηνές ακόμα.</span>';
-  renderChars();
+  if(document.getElementById('drawer').classList.contains('open'))renderChars();
   if(document.activeElement!==$('dEpTitle'))$('dEpTitle').value=e.title;if(document.activeElement!==$('dCover'))$('dCover').value=e.cover==null?'':e.cover;
   const pc=paginate();$('pages').textContent=pc+' σελ. · '+n+' σκην'+(n===1?'ή':'ές');
   $('dMeta').textContent=$('pages').textContent+' · '+$('saveState').textContent;
@@ -1201,7 +1209,7 @@ $('delWrap').addEventListener('click',ev=>{
 });
 $('clearExample').addEventListener('click',()=>{setEdit(true,true);const e=ep();e.blocks=[{t:'scene',x:''}];markDirty(e);renderScript();place(script.firstElementChild,0);});
 const drawer=$('drawer'),scrim=$('scrim');
-function openDrawer(){syncAll();updateSide();bkRefresh();drawer.classList.add('open');scrim.classList.add('open');}
+function openDrawer(){syncAll();drawer.classList.add('open');scrim.classList.add('open');updateSide();bkRefresh();}
 $('menuBtn').addEventListener('click',openDrawer);
 function closeDrawer(){drawer.classList.remove('open');scrim.classList.remove('open');}
 scrim.addEventListener('click',closeDrawer);
