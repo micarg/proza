@@ -101,7 +101,7 @@ button:active{transform:scale(.97)}
 /* page */
 .deskarea{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:62px var(--padb,45vh);min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:none;scrollbar-width:none}
 .deskarea::-webkit-scrollbar{display:none}
-.page{max-width:8.5in;margin:0 auto;background:var(--p-bg);color:var(--p-ink);border:1px solid var(--p-edge);box-shadow:0 20px 50px rgba(0,0,0,.45);border-radius:14px;padding:1in 1in 1in 1.5in;min-height:11in;position:relative}
+.page{max-width:8.5in;margin:0 auto;background:var(--p-bg);color:var(--p-ink);border:1px solid var(--p-edge);box-shadow:0 20px 50px rgba(0,0,0,.45);border-radius:2px;padding:1in 1in 1in 1.5in;min-height:11in;position:relative}
 .example{font-family:var(--ui);font-size:14px;background:var(--p-hl);color:var(--p-ink);border:.5px solid var(--p-line);border-radius:14px;padding:12px 14px;margin-bottom:24px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .bkbtns{display:flex;gap:6px}
 .example button.ghost{background:transparent;color:var(--p-muted)}
@@ -169,7 +169,15 @@ body.paperlight .sbar{background:rgba(0,0,0,.6)}
 #editBtn[aria-pressed=true]{background:var(--sel-bg);color:var(--sel-ink);border-color:transparent}
 body.reading .bar{display:none}
 body.reading .b.cur{background:transparent}
-body.reading .deskarea{padding-top:18px}
+body.reading .deskarea{padding-top:18px;padding-bottom:48px}
+body.reading .page{display:none}
+.pageview{display:flex;flex-direction:column;align-items:center;gap:14px}
+.pv-wrap{position:relative;flex:0 0 auto;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.35);border:1px solid var(--p-edge)}
+.pv-sheet{position:absolute;top:0;left:0;width:794px;height:1123px;transform-origin:0 0;background:var(--p-bg);color:var(--p-ink);font-family:var(--script);font-size:16px;line-height:16px;padding:96px 96px 96px 144px;box-sizing:border-box}
+.pv-num{position:absolute;top:48px;right:96px}
+.pv-l{white-space:pre;height:16px}
+.pv-scene{font-weight:700}.pv-scene.lbl{font-weight:400;color:var(--p-label)}
+.pv-cover{display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:18.7px;line-height:24px;white-space:pre-wrap;padding:96px}
 body.reading .urbtn{opacity:.2;pointer-events:none}
 body.focus{background:var(--p-bg)}
 body.focus::before{background:var(--p-bg);backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -231,8 +239,8 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
     padding-top:calc(18px + env(safe-area-inset-top,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
   .drawer.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.6)}
   .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:14}
-  .page{padding:24px 18px 40px 18px;min-height:60vh;border-radius:18px}
-  #script{font-size:16px}
+  .page{padding:34px 7% 48px 12%;min-height:60vh;border-radius:2px}
+  #script{font-size:14.5px;line-height:1.3}
   .b.character{margin-left:28%;width:70%}
   .b.dialogue{margin-left:10%;width:80%}
   .b.paren{margin-left:20%;width:60%}
@@ -327,6 +335,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
     <article class="page cover" lang="el" aria-label="Σελίδα τίτλου">
       <div id="coverTitle" class="covertitle" contenteditable="true" spellcheck="false" data-ph="ΤΙΤΛΟΣ"></div>
     </article>
+    <div class="pageview" id="pageView" lang="el" hidden></div>
     <article class="page" id="scriptPage" lang="el">
       <div id="pgmarks" aria-hidden="true"></div>
       <div class="example" id="exampleNote" hidden><span>Αυτή είναι μια σκηνή-παράδειγμα για να δεις πώς δουλεύει.</span><button id="clearExample">Καθάρισε και ξεκίνα</button></div>
@@ -485,7 +494,7 @@ function mk(b){const d=document.createElement('div');d.className='b '+b.t;d.data
 function applyCorrect(d,t){const on=t==='action';d.spellcheck=on;d.setAttribute('autocorrect',on?'on':'off');d.setAttribute('autocapitalize',t==='action'||t==='dialogue'?'sentences':t==='paren'?'none':'characters');d.setAttribute('autocomplete','off');}
 const coverEl=$('coverTitle');
 const coverText=e=>e.cover==null?e.title:e.cover;
-function renderScript(){const e=ep();if(!restoring&&histEp!==S.cur)setTimeout(histReset,0);script.innerHTML='';if(!e.blocks.length)e.blocks.push({t:'scene',x:''});e.blocks.forEach(b=>script.appendChild(mk(b)));coverEl.textContent=coverText(e);updateSide();}
+function renderScript(){setTimeout(()=>{if(typeof editing!=='undefined'&&!editing)renderPageView();},0);const e=ep();if(!restoring&&histEp!==S.cur)setTimeout(histReset,0);script.innerHTML='';if(!e.blocks.length)e.blocks.push({t:'scene',x:''});e.blocks.forEach(b=>script.appendChild(mk(b)));coverEl.textContent=coverText(e);updateSide();}
 coverEl.addEventListener('input',()=>{const e=ep();e.cover=coverEl.innerText.replace(/\n+$/,'');markDirty(e);});
 coverEl.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();const f=script.firstElementChild;if(f)place(f,0);}});
 coverEl.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,(ev.clipboardData||window.clipboardData).getData('text/plain'));});
@@ -928,7 +937,27 @@ let lastTouchEnd=0;document.addEventListener('touchend',e=>{const now=Date.now()
 if(window.visualViewport){const vm=document.querySelector('meta[name=viewport]');visualViewport.addEventListener('resize',()=>{if(visualViewport.scale>1.02&&vm){const c=vm.content;vm.content=c.replace(/,?\s*maximum-scale=[^,]*/,'')+',maximum-scale=1';setTimeout(()=>{vm.content=c;},300);}});}
 /* read mode by default: editing only after tapping the pencil */
 const EDIT_CE=script.contentEditable;let editing=true;
-function setEdit(on,quiet){editing=on;document.body.classList.toggle('reading',!on);
+/* reading view: the episode drawn as real A4 pages (same layout, wrapping and page breaks as the PDF), scaled to fit */
+const PVX={scene:0,action:0,character:211,dialogue:96,paren:154,transition:0};
+function renderPageView(){const box=$('pageView');if(!box||editing)return;const e=ep();if(!e)return;
+  const br=new Set(pageBreaks(e));let html='',page=1,top=true,sn=0;
+  const sheetOpen=n=>`<div class="pv-wrap"><div class="pv-sheet">${n?`<span class="pv-num">${n}.</span>`:''}`;
+  html+=sheetOpen(0).replace('pv-sheet','pv-sheet pv-cover')+esc(up(coverText(e)||''))+'</div></div>';
+  html+=sheetOpen(1);
+  e.blocks.forEach((b,i)=>{
+    if(br.has(i)){page++;html+='</div></div>'+sheetOpen(page);top=true;}
+    const gap=top?0:PG[b.t];top=false;
+    const lines=wrapLines(dispText(b),PW[b.t]);if(b.t==='scene')lines.unshift('ΣΚΗΝΗ '+(++sn));
+    html+=`<div data-b="${i}" style="margin-top:${gap*16}px">`+lines.map((l,k)=>{
+      const cls='pv-l'+(b.t==='scene'?(k===0?' pv-scene lbl':' pv-scene'):'');
+      const st=b.t==='transition'?'text-align:right':`padding-left:${PVX[b.t]}px`;
+      return `<div class="${cls}" style="${st}">${esc(l)||' '}</div>`;}).join('')+'</div>';});
+  html+='</div></div>';box.innerHTML=html;fitPageView();}
+function fitPageView(){const box=$('pageView');if(!box||box.hidden)return;const cs=getComputedStyle(DESK);
+  const W=Math.min(794,DESK.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight));const k=W/794;
+  box.querySelectorAll('.pv-wrap').forEach(w=>{w.style.width=W+'px';w.style.height=(1123*k)+'px';w.firstElementChild.style.transform=`scale(${k})`;});}
+addEventListener('resize',()=>{if(!editing)fitPageView();});
+function setEdit(on,quiet){editing=on;document.body.classList.toggle('reading',!on);$('pageView').hidden=on;if(!on)renderPageView();
   script.contentEditable=on?EDIT_CE:'false';coverEl.contentEditable=on?'true':'false';
   $('editBtn').setAttribute('aria-pressed',String(on));$('editBtn').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   if(!on){if(document.activeElement===script||document.activeElement===coverEl)document.activeElement.blur();if(typeof hideBubble==='function')hideBubble();}
@@ -999,7 +1028,7 @@ $('charList').addEventListener('click',ev=>{
   const c=ev.target.closest('[data-ch]');if(c){openChar=openChar===c.dataset.ch?null:c.dataset.ch;renderChars();return;}
   const s=ev.target.closest('[data-ep]');if(!s)return;
   if(s.dataset.ep!==S.cur){syncAll();S.cur=s.dataset.ep;localSave();renderScript();}
-  closeDrawer();const el=script.children[+s.dataset.b];if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}
+  closeDrawer();if(!editing){const t=$('pageView').querySelector(`[data-b="${s.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+s.dataset.b];if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}
 });
 function setFocus(on){if(on&&!editing)setEdit(true,true);document.body.classList.toggle('focus',on);try{localStorage.setItem('scr-focus',on?'1':'')}catch(e){}if(on){const el=lastEl&&lastEl.isConnected?lastEl:script.lastElementChild;if(el)place(el,el.textContent.length);}}
 $('focusBtn').addEventListener('click',()=>setFocus(true));
@@ -1029,7 +1058,7 @@ function paginate(){const e=ep();if(!e)return 1;const br=pageBreaks(e);
 addEventListener('resize',()=>paginate());
 
 $('epList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;syncAll();S.cur=b.dataset.id;localSave();renderScript();setEdit(false,true);closeDrawer();resetDel();DESK.scrollTo({top:0});});
-$('sceneList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;const el=script.children[+b.dataset.b];closeDrawer();if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}});
+$('sceneList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;if(!editing){closeDrawer();const t=$('pageView').querySelector(`[data-b="${b.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+b.dataset.b];closeDrawer();if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}});
 $('addScene').addEventListener('click',()=>{closeDrawer();lastEl=null;setEdit(true,true);setTimeout(newScene,50);});
 $('addEp').addEventListener('click',()=>{syncAll();setEdit(true,true);const e={id:uid(),title:'Επεισόδιο '+(S.eps.length+1),blocks:[{t:'scene',x:''}],updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();closeDrawer();setTimeout(()=>place(script.firstElementChild,0),50);});
 $('epTitle').addEventListener('input',e=>{const x=ep();x.title=e.target.value;markDirty(x);$('epList').querySelector('.on .tx').textContent=x.title||'Χωρίς τίτλο';});
