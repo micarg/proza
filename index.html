@@ -30,9 +30,11 @@
   --blur:saturate(180%) blur(22px);
   color-scheme:dark;
 }
-body.paperlight{--p-bg:#ffffff; --p-ink:#000000; --p-muted:#8a8a8e; --p-line:rgba(0,0,0,.13); --p-hl:rgba(0,0,0,.045); --p-label:#6e6e73; --p-edge:rgba(255,255,255,0)}
+body.paperlight,html.paperlight{--p-bg:#ffffff; --p-ink:#000000; --p-muted:#8a8a8e; --p-line:rgba(0,0,0,.13); --p-hl:rgba(0,0,0,.045); --p-label:#6e6e73; --p-edge:rgba(255,255,255,0)}
 *{box-sizing:border-box}
-html{position:fixed;top:0;left:0;right:0;height:var(--vvh,100%);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+html{position:fixed;inset:0;height:auto;min-height:100%;overflow:hidden;background:var(--p-bg);}
+html.kbd{bottom:auto;min-height:0;height:var(--vvh,100%)}
+html{overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
 body{height:100%;overflow:hidden;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);max-width:100vw;overscroll-behavior:none}
 body:not(.printview){touch-action:pan-y}
 body.printview .deskarea{overflow-x:auto;touch-action:pan-x pan-y}
@@ -929,7 +931,8 @@ function drawSbar(show){const r=DESK.getBoundingClientRect(),sh=DESK.scrollHeigh
   SB.style.top=y+'px';SB.style.height=th+'px';if(show){SB.classList.add('show');clearTimeout(sbT);sbT=setTimeout(()=>SB.classList.remove('show'),1100);}}
 DESK.addEventListener('scroll',()=>drawSbar(true),{passive:true});
 function fitViewport(){const vv=window.visualViewport;if(!vv)return;const kbd=vv.height<innerHeight*0.85;
-  document.documentElement.style.setProperty('--vvh',(kbd?vv.height:innerHeight)+'px');
+  document.documentElement.classList.toggle('kbd',kbd);
+  if(kbd)document.documentElement.style.setProperty('--vvh',vv.height+'px');
   document.documentElement.style.setProperty('--padb',kbd?'140px':'45vh');
   if(window.scrollY||vv.offsetTop)window.scrollTo(0,0);}
 if(window.visualViewport){visualViewport.addEventListener('resize',fitViewport);visualViewport.addEventListener('scroll',fitViewport);}
@@ -1156,7 +1159,7 @@ $('focusBtn').addEventListener('click',()=>setFocus(true));
 $('focusExit').addEventListener('click',()=>setFocus(false));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('focus'))setFocus(false);});
 document.body.classList.add('focus');
-function setPaper(on){document.body.classList.toggle('paperlight',on);$('paperBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('scr-paper',on?'1':'')}catch(e){}}
+function setPaper(on){document.body.classList.toggle('paperlight',on);document.documentElement.classList.toggle('paperlight',on);$('paperBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('scr-paper',on?'1':'')}catch(e){}}
 $('paperBtn').addEventListener('click',()=>setPaper(!document.body.classList.contains('paperlight')));
 try{if(localStorage.getItem('scr-paper'))setPaper(true);}catch(e){}
 const PW={scene:61,action:61,character:38,dialogue:35,paren:26,transition:61},PG={scene:2,action:1,character:1,dialogue:0,paren:0,transition:1},PAGE_LINES=55;
