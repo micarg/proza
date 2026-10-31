@@ -188,6 +188,10 @@ body.focus .bar,body.focus .focusExit{display:none!important}
 /* focus mode: one near-invisible control, a small sheet only on demand */
 .fmenu{display:none}
 .fleave{display:none}
+/* focus mode: a band in the page colour under the corner buttons; text scrolling beneath it fades out */
+.ftop{display:none}
+body.focus .ftop{display:block;position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top,0px) + 58px);z-index:15;pointer-events:none;
+  background:linear-gradient(to bottom,var(--p-bg) 0,var(--p-bg) calc(100% - 22px),color-mix(in srgb,var(--p-bg) 0%,transparent) 100%)}
 body.focus .fleave{display:grid;place-items:center;position:fixed;top:calc(6px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));z-index:20;width:34px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--p-muted);opacity:.45;transition:opacity .2s,background .2s}
 body.focus .fleave:hover,body.focus .fleave:focus-visible{opacity:1;background:var(--p-hl)}
 body.focus .fmenu{display:flex;align-items:flex-start;gap:2px;position:fixed;top:calc(6px + env(safe-area-inset-top,0px));right:calc(8px + env(safe-area-inset-right,0px));z-index:20}
@@ -208,10 +212,10 @@ body.focus .fmenu{display:flex;align-items:flex-start;gap:2px;position:fixed;top
 .fpanel .fexit{color:var(--muted)}
 body.focus .shell{grid-template-columns:minmax(0,1fr)}
 body.focus .page{box-shadow:none;border-color:transparent}
-body.focus .deskarea{padding-block:48px var(--padb,45vh)}
+body.focus .deskarea{padding-block:58px var(--padb,45vh)}
 body.focus .b.cur{background:transparent}
 body.focus .page{max-width:9in}
-@media (max-width:860px){body.focus .page{padding:12px 4px 40px}body.focus #script{font-size:17px;line-height:1.45}body.focus .deskarea{padding-block:44px var(--padb,45vh);padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}}
+@media (max-width:860px){body.focus .page{padding:12px 4px 40px}body.focus #script{font-size:17px;line-height:1.45}body.focus .deskarea{padding-block:54px var(--padb,45vh);padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}}
 body.focus .b.scene::after{opacity:.7}
 body.focus .focusExit{display:flex;position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:calc(12px + env(safe-area-inset-right,0px));z-index:20;opacity:.35;height:34px;padding:0 14px;align-items:center;font-size:13px;font-weight:600;border-radius:999px;transition:opacity .2s}
 body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
@@ -352,6 +356,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 <div class="toast" id="toast" role="status"></div>
 <button class="focusExit glassbtn" id="focusExit" type="button">Έξοδος εστίασης</button>
 <button class="fleave" id="fLeave" type="button" aria-label="Έξοδος από την εστίαση" title="Έξοδος από την εστίαση"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 20h8M12 16v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+<div class="ftop" aria-hidden="true"></div>
 <div class="fmenu" id="fmenu">
   <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
@@ -821,7 +826,7 @@ function keepCaret(){const rc=caretRect();if(!rc)return;
   const vv=window.visualViewport;const kbdKnown=vv&&vv.height<innerHeight*0.85;const touch=matchMedia('(pointer:coarse)').matches;
   const db=DESK.getBoundingClientRect().bottom;const visBottom=kbdKnown?db:(touch&&document.activeElement===script?Math.min(db,innerHeight*0.6):db);
   const limit=visBottom-4*lh;
-  const topLimit=document.body.classList.contains('focus')?48:($('bar').getBoundingClientRect().bottom+12);
+  const topLimit=document.body.classList.contains('focus')?(document.querySelector('.ftop').getBoundingClientRect().bottom+6):($('bar').getBoundingClientRect().bottom+12);
   if(rc.bottom>limit)DESK.scrollBy({top:rc.bottom-limit,behavior:'smooth'});
   else if(rc.top<topLimit)DESK.scrollBy({top:rc.top-topLimit-lh,behavior:'smooth'});}
 let kcRaf=0;script.addEventListener('input',()=>{cancelAnimationFrame(kcRaf);kcRaf=requestAnimationFrame(keepCaret);});
