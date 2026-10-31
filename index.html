@@ -99,7 +99,8 @@ button:active{transform:scale(.97)}
 .switch[aria-checked=true] .knob::after{left:22px;background:#1c1c1e}
 
 /* page */
-.deskarea{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:62px var(--padb,45vh);min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.deskarea{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:62px var(--padb,45vh);min-width:0;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:none;scrollbar-width:none}
+.deskarea::-webkit-scrollbar{display:none}
 .page{max-width:8.5in;margin:0 auto;background:var(--p-bg);color:var(--p-ink);border:1px solid var(--p-edge);box-shadow:0 20px 50px rgba(0,0,0,.45);border-radius:14px;padding:1in 1in 1in 1.5in;min-height:11in;position:relative}
 .example{font-family:var(--ui);font-size:14px;background:var(--p-hl);color:var(--p-ink);border:.5px solid var(--p-line);border-radius:14px;padding:12px 14px;margin-bottom:24px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .bkbtns{display:flex;gap:6px}
@@ -162,6 +163,9 @@ button:active{transform:scale(.97)}
 
 /* focus */
 .focusExit{display:none}
+.sbar{position:fixed;right:calc(3px + env(safe-area-inset-right,0px));width:4px;border-radius:4px;background:rgba(255,255,255,.55);z-index:12;opacity:0;transition:opacity .35s;pointer-events:none}
+.sbar.show{opacity:1;transition:opacity .1s}
+body.paperlight .sbar{background:rgba(0,0,0,.6)}
 #editBtn[aria-pressed=true]{background:var(--sel-bg);color:var(--sel-ink);border-color:transparent}
 body.reading .bar{display:none}
 body.reading .b.cur{background:transparent}
@@ -169,7 +173,9 @@ body.reading .deskarea{padding-top:18px}
 body.reading .urbtn{opacity:.2;pointer-events:none}
 body.focus{background:var(--p-bg)}
 body.focus::before{background:var(--p-bg);backdrop-filter:none;-webkit-backdrop-filter:none}
-body.focus .top,body.focus .drawer,body.focus .scrim,body.focus .example,body.focus .toast,body.focus .page.cover,body.focus #pgmarks{display:none!important}
+body.focus .top,body.focus .drawer,body.focus .scrim,body.focus .example,body.focus .toast,body.focus .page.cover{display:none!important}
+body.focus .pgmark{border-top-color:transparent}
+body.focus .pgmark span,body.focus .pgfirst{opacity:.55}
 body.focus .bar,body.focus .focusExit{display:none!important}
 /* focus mode: one near-invisible control, a small sheet only on demand */
 .fmenu{display:none}
@@ -808,6 +814,12 @@ function keepCaret(){const rc=caretRect();if(!rc)return;
 let kcRaf=0;script.addEventListener('input',()=>{cancelAnimationFrame(kcRaf);kcRaf=requestAnimationFrame(keepCaret);});
 /* app shell: size the app to the visible area (above the keyboard) and keep the window itself from panning */
 const DESK=document.querySelector('.deskarea');
+/* scroll position bar on the right: appears while scrolling, fades after */
+const SB=document.createElement('div');SB.className='sbar';document.body.appendChild(SB);let sbT=null;
+function drawSbar(show){const r=DESK.getBoundingClientRect(),sh=DESK.scrollHeight,ch=DESK.clientHeight;if(sh<=ch+4){SB.classList.remove('show');return;}
+  const top=r.top+8,track=r.height-16,th=Math.max(36,track*ch/sh),y=top+(track-th)*(DESK.scrollTop/(sh-ch));
+  SB.style.top=y+'px';SB.style.height=th+'px';if(show){SB.classList.add('show');clearTimeout(sbT);sbT=setTimeout(()=>SB.classList.remove('show'),1100);}}
+DESK.addEventListener('scroll',()=>drawSbar(true),{passive:true});
 function fitViewport(){const vv=window.visualViewport;if(!vv)return;const kbd=vv.height<innerHeight*0.85;
   document.documentElement.style.setProperty('--vvh',(kbd?vv.height:innerHeight)+'px');
   document.documentElement.style.setProperty('--padb',kbd?'140px':'45vh');
