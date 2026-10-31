@@ -32,8 +32,10 @@
 }
 body.paperlight{--p-bg:#ffffff; --p-ink:#000000; --p-muted:#8a8a8e; --p-line:rgba(0,0,0,.13); --p-hl:rgba(0,0,0,.045); --p-label:#6e6e73; --p-edge:rgba(255,255,255,0)}
 *{box-sizing:border-box}
-html{position:fixed;top:0;left:0;right:0;height:var(--vvh,100%);overflow:hidden;overscroll-behavior:none;touch-action:pan-y;-webkit-text-size-adjust:100%}
-body{height:100%;overflow:hidden;display:flex;flex-direction:column;max-width:100vw;overscroll-behavior:none;touch-action:pan-y}
+html{position:fixed;top:0;left:0;right:0;height:var(--vvh,100%);overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{height:100%;overflow:hidden;display:flex;flex-direction:column;max-width:100vw;overscroll-behavior:none}
+body:not(.printview){touch-action:pan-y}
+body.printview .deskarea{overflow-x:auto;touch-action:pan-x pan-y}
 .shell,.deskarea,.top{max-width:100vw}
 body{background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;margin:0;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
@@ -189,12 +191,32 @@ body.focus .drawer{position:fixed;top:0;bottom:0;left:0;width:min(340px,88vw);he
 body.focus .drawer.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.6)}
 body.focus .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:24}
 body.focus .toast{top:calc(env(safe-area-inset-top,0px) + 62px);bottom:auto}
+
+/* menu layout: summary card on top, episodes, then folding groups */
+.dtop{display:flex;flex-direction:column;gap:4px;padding:2px 4px 0}
+.dser{font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.dtop .dmeta{font-size:13px;color:var(--muted);margin-bottom:10px}
+.qa{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.qbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:68px;border:.5px solid var(--line);border-radius:16px;background:var(--fill-2);color:var(--ink);font-size:12.5px;font-weight:600;box-shadow:var(--hi)}
+.qbtn:hover{background:var(--fill)}
+.qbtn[aria-checked=true]{background:var(--sel-bg);color:var(--sel-ink)}
+.dsec{display:flex;flex-direction:column;gap:6px}
+.dgrp{border-top:.5px solid var(--line);padding-top:4px}
+.drawer{gap:14px}
+.dgrp>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:12px 6px;font-size:16px;font-weight:600;border-radius:10px}
+.dgrp>summary::-webkit-details-marker{display:none}
+.dgrp>summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .2s}
+.dgrp[open]>summary::after{transform:rotate(45deg)}
+.dgrp>summary .cnt{font-size:13px;font-weight:500;color:var(--muted)}
+.dbody{display:flex;flex-direction:column;gap:8px;padding:2px 2px 12px}
+.dbody .lbl{font-size:12px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 4px 0}
+.dbody input#seriesTitle{font:inherit;font-size:16px;font-weight:600;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink);width:100%}
 .dhead{display:flex;flex-direction:column;gap:8px}
 .dhead .dmeta{font-size:13px;color:var(--muted);padding:0 4px}
 .dfield{display:flex;flex-direction:column;gap:6px}
 .dfield input,.dfield textarea{font:inherit;font-size:16px;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink);width:100%;resize:vertical}
 .dfield input:focus,.dfield textarea:focus{outline:none;border-color:rgba(255,255,255,.35)}
-.pageview{display:flex;flex-direction:column;align-items:center;gap:14px}
+.pageview{display:flex;flex-direction:column;align-items:center;gap:14px;margin:0 auto}
 .pv-wrap{position:relative;flex:0 0 auto;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.35);border:1px solid var(--p-edge)}
 .pv-sheet{position:absolute;top:0;left:0;width:794px;height:1123px;transform-origin:0 0;background:var(--p-bg);color:var(--p-ink);font-family:var(--script);font-size:16px;line-height:16px;padding:96px 96px 96px 144px;box-sizing:border-box}
 .pv-num{position:absolute;top:48px;right:96px}
@@ -299,73 +321,84 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 
 <div class="shell">
   <aside class="drawer" id="drawer">
-    <div class="dhead">
-      <button class="iconbtn" id="dSave" style="justify-content:flex-start;border-radius:14px;height:46px;width:100%">💾&nbsp; Αποθήκευση αντιγράφου</button>
-      <button class="switch" id="printBtn" role="switch" aria-checked="false" type="button"><span>Προβολή εκτύπωσης (σελίδες Α4)</span><span class="knob" aria-hidden="true"></span></button>
+    <div class="dtop">
+      <div class="dser" id="dSeriesName">Η σειρά μου</div>
       <div class="dmeta" id="dMeta"></div>
+      <div class="qa">
+        <button class="qbtn" id="dSave" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a1 1 0 0 1 1-2z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 3v5h7V3M8 21v-7h8v7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span>Αποθήκευση</span></button>
+        <button class="qbtn" id="printBtn" type="button" role="switch" aria-checked="false"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11h7M9 14h7M9 17h4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Εκτύπωση</span></button>
+        <button class="qbtn" id="addScene" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Νέα σκηνή</span></button>
+      </div>
     </div>
-    <div class="dfield">
-      <h3><label for="dEpTitle">Τίτλος επεισοδίου</label></h3>
-      <input id="dEpTitle" autocomplete="off">
-      <h3><label for="dCover">Εξώφυλλο (σελίδα τίτλου)</label></h3>
-      <textarea id="dCover" rows="2" placeholder="Αν το αφήσεις κενό, μπαίνει ο τίτλος του επεισοδίου"></textarea>
-    </div>
-    <div>
-      <h3>Σειρές</h3>
-      <div class="list" id="projList"></div>
-      <button class="add" id="addProj" style="margin-top:6px;width:100%">+ Νέα σειρά</button>
-    </div>
-    <div>
-      <h3><label for="seriesTitle">Τίτλος σειράς</label></h3>
-      <input id="seriesTitle" value="Η σειρά μου">
-    </div>
-    <div>
+    <section class="dsec">
       <h3>Επεισόδια</h3>
       <div class="list" id="epList"></div>
-      <button class="add" id="addEp" style="margin-top:6px;width:100%">+ Νέο επεισόδιο</button>
-    </div>
-    <div>
-      <h3>Σκηνές</h3>
-      <div class="list" id="sceneList"></div>
-      <button class="add" id="addScene" style="margin-top:6px;width:100%">+ Νέα σκηνή</button>
-    </div>
-    <div>
-      <h3>Χαρακτήρες σειράς</h3>
-      <div class="list" id="charList"></div>
-    </div>
-    <div class="tools">
-      <h3>Εμφάνιση</h3>
-      <button class="switch" id="paperBtn" role="switch" aria-checked="false" type="button"><span>Λευκή σελίδα, μαύρα γράμματα</span><span class="knob" aria-hidden="true"></span></button>
-      <button class="switch" id="acBtn" role="switch" aria-checked="true" type="button"><span>Αυτόματη διόρθωση στη δράση</span><span class="knob" aria-hidden="true"></span></button>
-      <p class="help">Διορθώνει και βάζει τόνους όταν πατάς κενό. Αν μια διόρθωση δεν σου αρέσει, πάτα αμέσως διαγραφή για να επανέλθει η λέξη σου. Θα σε ρωτήσει αν θέλεις να μπει στο λεξιλόγιο.</p>
-    </div>
-    <div class="tools">
-      <h3>Το λεξιλόγιό μου <span id="vocabCount" class="vcount"></span></h3>
-      <form id="vocabForm" class="vform"><input id="vocabInput" placeholder="Πρόσθεσε λέξη…" autocomplete="off" autocapitalize="none" aria-label="Νέα λέξη"><button type="submit">Προσθήκη</button></form>
-      <div class="vlist" id="vocabList"></div>
-    </div>
-    <div class="tools">
-      <h3>Αρχείο</h3>
-      <button class="iconbtn" id="expTxt">Λήψη κειμένου (Fountain .txt)</button>
-      <button class="iconbtn" id="expPdf">Λήψη PDF</button>
-      <button class="iconbtn" id="expDocx">Λήψη Word (.docx)</button>
-      <button class="iconbtn" id="bkBtn">Αντίγραφο ασφαλείας όλης της σειράς</button>
-      <label class="iconbtn" for="bkFile" style="cursor:pointer">Επαναφορά από αντίγραφο</label>
-      <input type="file" id="bkFile" accept=".json,application/json" hidden>
-      <div id="bkConfirm"></div>
-      <p class="help" id="bkInfo"></p>
-      <button class="iconbtn" id="copyTxt">Αντιγραφή όλου του σεναρίου</button>
-      <label class="iconbtn" for="importFile" style="cursor:pointer">Εισαγωγή από .txt / .fountain</label>
-      <input type="file" id="importFile" accept=".txt,.fountain,text/plain" hidden>
-      <div id="delProjWrap"><button class="iconbtn danger" id="delProj">Διαγραφή σειράς</button></div>
-      <div id="delWrap"><button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button></div>
-    </div>
-    <div class="help">
+      <button class="add" id="addEp">+ Νέο επεισόδιο</button>
+    </section>
+    <details class="dgrp">
+      <summary>Αυτό το επεισόδιο</summary>
+      <div class="dbody dfield">
+        <label class="lbl" for="dEpTitle">Τίτλος</label>
+        <input id="dEpTitle" autocomplete="off">
+        <label class="lbl" for="dCover">Εξώφυλλο</label>
+        <textarea id="dCover" rows="2" placeholder="Κενό = ο τίτλος του επεισοδίου"></textarea>
+        <div id="delWrap"><button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button></div>
+      </div>
+    </details>
+    <details class="dgrp">
+      <summary>Σκηνές <span class="cnt" id="cntScenes"></span></summary>
+      <div class="dbody"><div class="list" id="sceneList"></div></div>
+    </details>
+    <details class="dgrp">
+      <summary>Χαρακτήρες <span class="cnt" id="cntChars"></span></summary>
+      <div class="dbody"><div class="list" id="charList"></div></div>
+    </details>
+    <details class="dgrp">
+      <summary>Σειρές</summary>
+      <div class="dbody">
+        <div class="list" id="projList"></div>
+        <button class="add" id="addProj">+ Νέα σειρά</button>
+        <label class="lbl" for="seriesTitle">Τίτλος σειράς</label>
+        <input id="seriesTitle" value="Η σειρά μου">
+        <div id="delProjWrap"><button class="iconbtn danger" id="delProj">Διαγραφή σειράς</button></div>
+      </div>
+    </details>
+    <details class="dgrp">
+      <summary>Εξαγωγή &amp; αντίγραφα</summary>
+      <div class="dbody tools">
+        <button class="iconbtn" id="expPdf">PDF</button>
+        <button class="iconbtn" id="expDocx">Word (.docx)</button>
+        <button class="iconbtn" id="expTxt">Κείμενο (Fountain .txt)</button>
+        <button class="iconbtn" id="copyTxt">Αντιγραφή όλου του σεναρίου</button>
+        <button class="iconbtn" id="bkBtn">Αντίγραφο ασφαλείας σειράς</button>
+        <label class="iconbtn" for="bkFile" style="cursor:pointer">Επαναφορά από αντίγραφο</label>
+        <input type="file" id="bkFile" accept=".json,application/json" hidden>
+        <div id="bkConfirm"></div>
+        <label class="iconbtn" for="importFile" style="cursor:pointer">Εισαγωγή από .txt / .fountain</label>
+        <input type="file" id="importFile" accept=".txt,.fountain,text/plain" hidden>
+        <p class="help" id="bkInfo"></p>
+      </div>
+    </details>
+    <details class="dgrp">
+      <summary>Ρυθμίσεις</summary>
+      <div class="dbody tools">
+        <button class="switch" id="paperBtn" role="switch" aria-checked="false" type="button"><span>Λευκή σελίδα</span><span class="knob" aria-hidden="true"></span></button>
+        <button class="switch" id="acBtn" role="switch" aria-checked="true" type="button"><span>Αυτόματη διόρθωση</span><span class="knob" aria-hidden="true"></span></button>
+        <p class="help">Διορθώνει και βάζει τόνους όταν πατάς κενό. Αν μια διόρθωση δεν σου αρέσει, πάτα αμέσως διαγραφή για να επανέλθει η λέξη σου. Θα σε ρωτήσει αν θέλεις να μπει στο λεξιλόγιο.</p>
+        <label class="lbl">Το λεξιλόγιό μου <span id="vocabCount" class="vcount"></span></label>
+        <form id="vocabForm" class="vform"><input id="vocabInput" placeholder="Πρόσθεσε λέξη…" autocomplete="off" autocapitalize="none" aria-label="Νέα λέξη"><button type="submit">Προσθήκη</button></form>
+        <div class="vlist" id="vocabList"></div>
+      </div>
+    </details>
+    <details class="dgrp">
+      <summary>Συντομεύσεις</summary>
+      <div class="dbody help">
       <p><b>Τρία κενά</b> βάζουν κόμμα.</p>
       <p><b>Enter</b> πηγαίνει στο επόμενο: Σκηνή → Δράση → Χαρακτήρας → Διάλογος → Δράση → … <b>Διπλό Enter</b> ξεκινά νέα σκηνή.</p>
       <p>Γράψε <b>ΕΣΩΤ.</b> ή <b>ΕΞΩΤ.</b> και η γραμμή γίνεται σκηνή. Γράψε <b>(</b> στην αρχή διαλόγου για παρένθεση.</p>
       <p>Στον υπολογιστή: <kbd>Tab</kbd> αλλάζει τύπο, <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>6</kbd> για κάθε τύπο.</p>
     </div>
+    </details>
   </aside>
   <div class="scrim" id="scrim"></div>
 
@@ -393,6 +426,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 <div class="ftop" aria-hidden="true"></div>
 <div class="fmenu" id="fmenu">
   <button class="fbtn fedit" id="fEdit" type="button" aria-pressed="false" aria-label="Επεξεργασία" title="Επεξεργασία"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m14.5 7.5 3 3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+  <button class="fbtn fclose" id="fZoomOut" type="button" aria-label="Σμίκρυνση">−</button><button class="fbtn fclose" id="fZoomIn" type="button" aria-label="Μεγέθυνση">+</button>
   <button class="fbtn fclose" id="fPrintClose" type="button">Κλείσιμο προβολής</button>
   <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
@@ -1010,12 +1044,25 @@ function renderPageView(){const box=$('pageView');if(!box||!printView)return;con
       const st=b.t==='transition'?'text-align:right':`padding-left:${PVX[b.t]}px`;
       return `<div class="${cls}" style="${st}">${esc(l)||' '}</div>`;}).join('')+'</div>';});
   html+='</div></div>';box.innerHTML=html;fitPageView();}
+let pvZoom=1;
 function fitPageView(){const box=$('pageView');if(!box||box.hidden)return;const cs=getComputedStyle(DESK);
-  const W=Math.min(794,DESK.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight));const k=W/794;
+  const fitW=Math.min(794,DESK.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight));const W=fitW*pvZoom;const k=W/794;
+  box.style.width=W+'px';
   box.querySelectorAll('.pv-wrap').forEach(w=>{w.style.width=W+'px';w.style.height=(1123*k)+'px';w.firstElementChild.style.transform=`scale(${k})`;});}
+/* zoom around a point of the screen (pinch centre or double-tap spot) */
+function zoomTo(z,cx,cy){z=Math.max(1,Math.min(4,z));const r=DESK.getBoundingClientRect();const ox=cx-r.left,oy=cy-r.top;
+  const px=(DESK.scrollLeft+ox)/pvZoom,py=(DESK.scrollTop+oy)/pvZoom;pvZoom=z;fitPageView();DESK.scrollLeft=px*z-ox;DESK.scrollTop=py*z-oy;}
+(function(){const box=$('pageView');let d0=0,z0=1,mx=0,my=0,lastTap=0,lx=0,ly=0;
+  const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  box.addEventListener('touchstart',e=>{if(e.touches.length===2){d0=dist(e.touches);z0=pvZoom;mx=(e.touches[0].clientX+e.touches[1].clientX)/2;my=(e.touches[0].clientY+e.touches[1].clientY)/2;}},{passive:true});
+  box.addEventListener('touchmove',e=>{if(e.touches.length===2&&d0){e.preventDefault();const z=z0*dist(e.touches)/d0;requestAnimationFrame(()=>zoomTo(z,mx,my));}},{passive:false});
+  box.addEventListener('touchend',e=>{if(e.touches.length<2)d0=0;if(e.changedTouches.length!==1||e.touches.length)return;const t=e.changedTouches[0],now=Date.now();
+    if(now-lastTap<300&&Math.abs(t.clientX-lx)<30&&Math.abs(t.clientY-ly)<30){e.preventDefault();zoomTo(pvZoom>1.2?1:2.2,t.clientX,t.clientY);lastTap=0;}else{lastTap=now;lx=t.clientX;ly=t.clientY;}},{passive:false});
+  const mid=()=>{const r=DESK.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];};
+  $('fZoomIn').addEventListener('click',()=>zoomTo(pvZoom*1.4,...mid()));$('fZoomOut').addEventListener('click',()=>zoomTo(pvZoom/1.4,...mid()));})();
 addEventListener('resize',()=>{if(printView)fitPageView();});
 let printView=false;
-function setPrint(on){printView=on;document.body.classList.toggle('printview',on);$('printBtn').setAttribute('aria-checked',String(on));$('pageView').hidden=!on;
+function setPrint(on){printView=on;pvZoom=1;document.body.classList.toggle('printview',on);$('printBtn').setAttribute('aria-checked',String(on));$('pageView').hidden=!on;
   if(on){if(editing)setEdit(false,true);renderPageView();DESK.scrollTo({top:0});}else{DESK.scrollTo({top:0});}}
 $('printBtn').addEventListener('click',()=>{setPrint(!printView);closeDrawer();});
 $('fPrintClose').addEventListener('click',()=>setPrint(false));
@@ -1067,6 +1114,7 @@ function updateSide(){
   if(document.activeElement!==$('dEpTitle'))$('dEpTitle').value=e.title;if(document.activeElement!==$('dCover'))$('dCover').value=e.cover==null?'':e.cover;
   const pc=paginate();$('pages').textContent=pc+' σελ. · '+n+' σκην'+(n===1?'ή':'ές');
   $('dMeta').textContent=$('pages').textContent+' · '+$('saveState').textContent;
+  $('dSeriesName').textContent=S.series||'Η σειρά μου';$('cntScenes').textContent=n?String(n):'';$('cntChars').textContent=$('charList').querySelectorAll('[data-ch]').length||'';
 }
 let openChar=null;
 function charIndex(){
