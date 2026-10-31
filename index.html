@@ -807,6 +807,18 @@ function keepCaret(){const rc=caretRect();if(!rc)return;
   if(rc.bottom>limit)window.scrollBy({top:rc.bottom-limit,behavior:'smooth'});
   else if(rc.top<topLimit)window.scrollBy({top:rc.top-topLimit-lh,behavior:'smooth'});}
 let kcRaf=0;script.addEventListener('input',()=>{cancelAnimationFrame(kcRaf);kcRaf=requestAnimationFrame(keepCaret);});
+/* never scroll past the end: the last line can rise at most to ~4 lines above the keyboard (or the screen bottom) */
+function scrollLimitDelta(){const last=script.lastElementChild;if(!last)return 0;
+  const lh=parseFloat(getComputedStyle(script).lineHeight)||20;const vv=window.visualViewport;
+  const visTop=vv?vv.offsetTop:0,visH=vv?vv.height:innerHeight;
+  const limit=visTop+visH-4*lh-(document.body.classList.contains('reading')?visH*0.25:0);
+  const lb=last.getBoundingClientRect().bottom;
+  return lb<limit?limit-lb:0;}
+let clampRaf=0;
+function clampScroll(){cancelAnimationFrame(clampRaf);clampRaf=requestAnimationFrame(()=>{const d=scrollLimitDelta();if(d>2){const y=Math.max(0,window.scrollY-d);window.scrollTo(0,y);
+  const vv=window.visualViewport;if(vv&&window.scrollY===0&&vv.offsetTop>0&&scrollLimitDelta()>2){/* the keyboard panned the view: pull it back */window.scrollTo(0,0);}}});}
+addEventListener('scroll',clampScroll,{passive:true});
+if(window.visualViewport){visualViewport.addEventListener('scroll',clampScroll);visualViewport.addEventListener('resize',clampScroll);}
 /* triple space → comma (works with or without the iPhone double-space period) */
 script.addEventListener('input',ev=>{
   if(ev.inputType!=='insertText'||ev.data!==' ')return;
