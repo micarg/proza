@@ -176,6 +176,9 @@ body.reading .b.cur{background:transparent}
 body.reading .deskarea{padding-top:18px;padding-bottom:48px}
 body.printview .page{display:none}
 .fbtn.fclose{display:none}
+/* completely clean while typing: corner buttons fade out, a tap on the screen brings them back */
+body.focus .fleave,body.focus .fmenu{transition:opacity .3s ease}
+body.focus.typing .fleave,body.focus.typing .fmenu{opacity:0!important;pointer-events:none}
 body.printview .fbtn.fclose{display:inline-flex;opacity:.8}
 body.printview .fmenu>:not(.fclose):not(.fpanel){display:none}
 body.reading .fmenu .fur,body.reading #fBtn{display:none}
@@ -1024,6 +1027,8 @@ function setEdit(on,quiet){if(on&&printView)setPrint(false);editing=on;document.
   requestAnimationFrame(()=>{setHdr&&setHdr();});
   if(!quiet)toast(on?'Επεξεργασία: γράψε ελεύθερα':'Μόνο ανάγνωση');}
 $('editBtn').addEventListener('click',()=>setEdit(!editing));
+script.addEventListener('input',()=>{if(!document.body.classList.contains('typing')){document.body.classList.add('typing');if(typeof openF==='function'&&!fPanel.hidden)openF(false);}});
+document.addEventListener('pointerdown',()=>document.body.classList.remove('typing'),{capture:true,passive:true});
 /* header height drives where the format bar and the page start */
 const topEl=document.querySelector('.top');
 function setHdr(){if(topEl&&topEl.offsetHeight)document.documentElement.style.setProperty('--hdr',topEl.offsetHeight+'px');}
