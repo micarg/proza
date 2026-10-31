@@ -845,7 +845,7 @@ function bkRefresh(){$('bkInfo').textContent='Τελευταίο αντίγρα�
   $('bkNote').hidden=!show;}
 async function doBackup(){syncAll();
   const data={app:'Proza',version:1,created:new Date().toISOString(),series:S.series,episodes:S.eps.map(e=>({id:e.id,title:e.title,cover:e.cover==null?null:e.cover,blocks:e.blocks,updated:e.updated||0})),vocab};
-  const name=fname('Proza - '+(S.series||'σειρά')+' - '+new Date().toISOString().slice(0,10))+'.json';
+  const name=fname('Proza - '+(S.series||'σειρά'))+'.json';
   if(await offer(name,JSON.stringify(data))){lsSet(BK_KEY,String(Date.now()));bkRefresh();toast('Το αντίγραφο ασφαλείας αποθηκεύτηκε');}}
 $('bkBtn').addEventListener('click',doBackup);
 $('saveBtn').addEventListener('click',doBackup);
