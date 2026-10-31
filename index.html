@@ -174,7 +174,23 @@ body.paperlight .sbar{background:rgba(0,0,0,.6)}
 body.reading .bar{display:none}
 body.reading .b.cur{background:transparent}
 body.reading .deskarea{padding-top:18px;padding-bottom:48px}
-body.reading .page{display:none}
+body.printview .page{display:none}
+.fbtn.fclose{display:none}
+body.printview .fbtn.fclose{display:inline-flex;opacity:.8}
+body.printview .fmenu>:not(.fclose):not(.fpanel){display:none}
+body.reading .fmenu .fur,body.reading #fBtn{display:none}
+.fbtn.fedit[aria-pressed=true]{opacity:.9;background:var(--p-hl)}
+/* menu as a sliding sheet on every screen size */
+body.focus .drawer{position:fixed;top:0;bottom:0;left:0;width:min(340px,88vw);height:auto;max-height:none;z-index:25;transform:translateX(-105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);
+  border-right:.5px solid var(--stroke);border-radius:0 26px 26px 0;padding-top:calc(18px + env(safe-area-inset-top,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+body.focus .drawer.open{transform:none;box-shadow:0 0 60px rgba(0,0,0,.6)}
+body.focus .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:24}
+body.focus .toast{top:calc(env(safe-area-inset-top,0px) + 62px);bottom:auto}
+.dhead{display:flex;flex-direction:column;gap:8px}
+.dhead .dmeta{font-size:13px;color:var(--muted);padding:0 4px}
+.dfield{display:flex;flex-direction:column;gap:6px}
+.dfield input,.dfield textarea{font:inherit;font-size:16px;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink);width:100%;resize:vertical}
+.dfield input:focus,.dfield textarea:focus{outline:none;border-color:rgba(255,255,255,.35)}
 .pageview{display:flex;flex-direction:column;align-items:center;gap:14px}
 .pv-wrap{position:relative;flex:0 0 auto;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.25),0 8px 24px rgba(0,0,0,.35);border:1px solid var(--p-edge)}
 .pv-sheet{position:absolute;top:0;left:0;width:794px;height:1123px;transform-origin:0 0;background:var(--p-bg);color:var(--p-ink);font-family:var(--script);font-size:16px;line-height:16px;padding:96px 96px 96px 144px;box-sizing:border-box}
@@ -185,7 +201,7 @@ body.reading .page{display:none}
 body.reading .urbtn{opacity:.2;pointer-events:none}
 body.focus{background:var(--p-bg)}
 body.focus::before{background:var(--p-bg);backdrop-filter:none;-webkit-backdrop-filter:none}
-body.focus .top,body.focus .drawer,body.focus .scrim,body.focus .example,body.focus .toast,body.focus .page.cover{display:none!important}
+body.focus .top,body.focus .example,body.focus .page.cover{display:none!important}
 body.focus .pgmark{border-top-color:transparent}
 body.focus .pgmark span,body.focus .pgfirst{opacity:.55}
 body.focus .bar,body.focus .focusExit{display:none!important}
@@ -280,6 +296,17 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 
 <div class="shell">
   <aside class="drawer" id="drawer">
+    <div class="dhead">
+      <button class="iconbtn" id="dSave" style="justify-content:flex-start;border-radius:14px;height:46px;width:100%">💾&nbsp; Αποθήκευση αντιγράφου</button>
+      <button class="switch" id="printBtn" role="switch" aria-checked="false" type="button"><span>Προβολή εκτύπωσης (σελίδες Α4)</span><span class="knob" aria-hidden="true"></span></button>
+      <div class="dmeta" id="dMeta"></div>
+    </div>
+    <div class="dfield">
+      <h3><label for="dEpTitle">Τίτλος επεισοδίου</label></h3>
+      <input id="dEpTitle" autocomplete="off">
+      <h3><label for="dCover">Εξώφυλλο (σελίδα τίτλου)</label></h3>
+      <textarea id="dCover" rows="2" placeholder="Αν το αφήσεις κενό, μπαίνει ο τίτλος του επεισοδίου"></textarea>
+    </div>
     <div>
       <h3>Σειρές</h3>
       <div class="list" id="projList"></div>
@@ -359,9 +386,11 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 </nav>
 <div class="toast" id="toast" role="status"></div>
 <button class="focusExit glassbtn" id="focusExit" type="button">Έξοδος εστίασης</button>
-<button class="fleave" id="fLeave" type="button" aria-label="Έξοδος από την εστίαση" title="Έξοδος από την εστίαση"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 20h8M12 16v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+<button class="fleave" id="fLeave" type="button" aria-label="Μενού" title="Μενού"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg></button>
 <div class="ftop" aria-hidden="true"></div>
 <div class="fmenu" id="fmenu">
+  <button class="fbtn fedit" id="fEdit" type="button" aria-pressed="false" aria-label="Επεξεργασία" title="Επεξεργασία"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m14.5 7.5 3 3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+  <button class="fbtn fclose" id="fPrintClose" type="button">Κλείσιμο προβολής</button>
   <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
   <div class="fpanel" id="fPanel" hidden></div>
@@ -410,7 +439,7 @@ function localLoad(){try{const d=JSON.parse(localStorage.getItem('proza-projects
 const allEps=()=>PROJ.flatMap(p=>p.eps);
 const projOf=id=>PROJ.find(p=>p.eps.some(e=>e.id===id));
 const seriesDocId=pid=>pid==='main'?'series':'series-'+pid;
-function setSaveState(t,warn){const el=$('saveState');el.textContent=t;el.classList.toggle('warn',!!warn);}
+function setSaveState(t,warn){const el=$('saveState');el.textContent=t;el.classList.toggle('warn',!!warn);const d=$('dMeta');if(d)d.textContent=($('pages').textContent||'')+' · '+t;}
 function markDirty(ep){if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSave();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
 async function flush(){
   if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(flush,600);return;}
@@ -503,7 +532,7 @@ function mk(b){const d=document.createElement('div');d.className='b '+b.t;d.data
 function applyCorrect(d,t){const on=t==='action';d.spellcheck=on;d.setAttribute('autocorrect',on?'on':'off');d.setAttribute('autocapitalize',t==='action'||t==='dialogue'?'sentences':t==='paren'?'none':'characters');d.setAttribute('autocomplete','off');}
 const coverEl=$('coverTitle');
 const coverText=e=>e.cover==null?e.title:e.cover;
-function renderScript(){setTimeout(()=>{if(typeof editing!=='undefined'&&!editing)renderPageView();},0);const e=ep();if(!restoring&&histEp!==S.cur)setTimeout(histReset,0);script.innerHTML='';if(!e.blocks.length)e.blocks.push({t:'scene',x:''});e.blocks.forEach(b=>script.appendChild(mk(b)));coverEl.textContent=coverText(e);updateSide();}
+function renderScript(){setTimeout(()=>{if(typeof printView!=='undefined'&&printView)renderPageView();},0);const e=ep();if(!restoring&&histEp!==S.cur)setTimeout(histReset,0);script.innerHTML='';if(!e.blocks.length)e.blocks.push({t:'scene',x:''});e.blocks.forEach(b=>script.appendChild(mk(b)));coverEl.textContent=coverText(e);updateSide();}
 coverEl.addEventListener('input',()=>{const e=ep();e.cover=coverEl.innerText.replace(/\n+$/,'');markDirty(e);});
 coverEl.addEventListener('keydown',ev=>{if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();const f=script.firstElementChild;if(f)place(f,0);}});
 coverEl.addEventListener('paste',ev=>{ev.preventDefault();document.execCommand('insertText',false,(ev.clipboardData||window.clipboardData).getData('text/plain'));});
@@ -657,7 +686,8 @@ function openF(on){fPanel.hidden=!on;fBtn.setAttribute('aria-expanded',String(on
   if(on)fPanel.innerHTML=TYPES.map(t=>`<button type="button" data-k="${t.k}" class="${t.k===curType?'on':''}">${t.l}</button>`).join('')+'<hr><button type="button" data-a="scene">+ Νέα σκηνή</button>';}
 ['pointerdown','mousedown'].forEach(n=>{fBtn.addEventListener(n,e=>e.preventDefault());fPanel.addEventListener(n,e=>e.preventDefault());});
 fBtn.addEventListener('click',()=>openF(fPanel.hidden));
-$('fLeave').addEventListener('click',()=>setFocus(false));['pointerdown','mousedown'].forEach(n=>$('fLeave').addEventListener(n,e=>e.preventDefault()));
+$('fEdit').addEventListener('click',()=>setEdit(!editing));['pointerdown','mousedown'].forEach(n=>$('fEdit').addEventListener(n,e=>e.preventDefault()));
+$('fLeave').addEventListener('click',()=>openDrawer());['pointerdown','mousedown'].forEach(n=>$('fLeave').addEventListener(n,e=>e.preventDefault()));
 fPanel.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;openF(false);
   if(b.dataset.a==='exit'){setFocus(false);return;}
   if(b.dataset.a==='scene'){newScene();return;}
@@ -963,7 +993,7 @@ if(window.visualViewport){const vm=document.querySelector('meta[name=viewport]')
 const EDIT_CE=script.contentEditable;let editing=true;
 /* reading view: the episode drawn as real A4 pages (same layout, wrapping and page breaks as the PDF), scaled to fit */
 const PVX={scene:0,action:0,character:211,dialogue:96,paren:154,transition:0};
-function renderPageView(){const box=$('pageView');if(!box||editing)return;const e=ep();if(!e)return;
+function renderPageView(){const box=$('pageView');if(!box||!printView)return;const e=ep();if(!e)return;
   const br=new Set(pageBreaks(e));let html='',page=1,top=true,sn=0;
   const sheetOpen=n=>`<div class="pv-wrap"><div class="pv-sheet">${n?`<span class="pv-num">${n}.</span>`:''}`;
   html+=sheetOpen(0).replace('pv-sheet','pv-sheet pv-cover')+esc(up(coverText(e)||''))+'</div></div>';
@@ -980,8 +1010,14 @@ function renderPageView(){const box=$('pageView');if(!box||editing)return;const 
 function fitPageView(){const box=$('pageView');if(!box||box.hidden)return;const cs=getComputedStyle(DESK);
   const W=Math.min(794,DESK.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight));const k=W/794;
   box.querySelectorAll('.pv-wrap').forEach(w=>{w.style.width=W+'px';w.style.height=(1123*k)+'px';w.firstElementChild.style.transform=`scale(${k})`;});}
-addEventListener('resize',()=>{if(!editing)fitPageView();});
-function setEdit(on,quiet){editing=on;document.body.classList.toggle('reading',!on);$('pageView').hidden=on;if(!on)renderPageView();
+addEventListener('resize',()=>{if(printView)fitPageView();});
+let printView=false;
+function setPrint(on){printView=on;document.body.classList.toggle('printview',on);$('printBtn').setAttribute('aria-checked',String(on));$('pageView').hidden=!on;
+  if(on){if(editing)setEdit(false,true);renderPageView();DESK.scrollTo({top:0});}else{DESK.scrollTo({top:0});}}
+$('printBtn').addEventListener('click',()=>{setPrint(!printView);closeDrawer();});
+$('fPrintClose').addEventListener('click',()=>setPrint(false));
+$('dSave').addEventListener('click',()=>{closeDrawer();doBackup();});
+function setEdit(on,quiet){if(on&&printView)setPrint(false);editing=on;document.body.classList.toggle('reading',!on);$('fEdit').setAttribute('aria-pressed',String(on));$('fEdit').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   script.contentEditable=on?EDIT_CE:'false';coverEl.contentEditable=on?'true':'false';
   $('editBtn').setAttribute('aria-pressed',String(on));$('editBtn').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   if(!on){if(document.activeElement===script||document.activeElement===coverEl)document.activeElement.blur();if(typeof hideBubble==='function')hideBubble();}
@@ -1023,7 +1059,9 @@ function updateSide(){
   let n=0;const sc=[];e.blocks.forEach((b,i)=>{if(b.t==='scene'){n++;sc.push(`<button class="item" data-b="${i}"><span class="n">${n}</span><span class="tx">${esc(up(b.x)||'Νέα σκηνή')}</span></button>`);}});
   $('sceneList').innerHTML=sc.join('')||'<span class="help">Δεν υπάρχουν σκηνές ακόμα.</span>';
   renderChars();
+  if(document.activeElement!==$('dEpTitle'))$('dEpTitle').value=e.title;if(document.activeElement!==$('dCover'))$('dCover').value=e.cover==null?'':e.cover;
   const pc=paginate();$('pages').textContent=pc+' σελ. · '+n+' σκην'+(n===1?'ή':'ές');
+  $('dMeta').textContent=$('pages').textContent+' · '+$('saveState').textContent;
 }
 let openChar=null;
 function charIndex(){
@@ -1052,13 +1090,13 @@ $('charList').addEventListener('click',ev=>{
   const c=ev.target.closest('[data-ch]');if(c){openChar=openChar===c.dataset.ch?null:c.dataset.ch;renderChars();return;}
   const s=ev.target.closest('[data-ep]');if(!s)return;
   if(s.dataset.ep!==S.cur){syncAll();S.cur=s.dataset.ep;localSave();renderScript();}
-  closeDrawer();if(!editing){const t=$('pageView').querySelector(`[data-b="${s.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+s.dataset.b];if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}
+  closeDrawer();if(printView){const t=$('pageView').querySelector(`[data-b="${s.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+s.dataset.b];if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}
 });
-function setFocus(on){if(on&&!editing)setEdit(true,true);document.body.classList.toggle('focus',on);try{localStorage.setItem('scr-focus',on?'1':'')}catch(e){}if(on){const el=lastEl&&lastEl.isConnected?lastEl:script.lastElementChild;if(el)place(el,el.textContent.length);}}
+function setFocus(on){on=true;document.body.classList.toggle('focus',on);try{localStorage.setItem('scr-focus',on?'1':'')}catch(e){}if(on){const el=lastEl&&lastEl.isConnected?lastEl:script.lastElementChild;if(el)place(el,el.textContent.length);}}
 $('focusBtn').addEventListener('click',()=>setFocus(true));
 $('focusExit').addEventListener('click',()=>setFocus(false));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('focus'))setFocus(false);});
-try{if(localStorage.getItem('scr-focus'))document.body.classList.add('focus');}catch(e){}
+document.body.classList.add('focus');
 function setPaper(on){document.body.classList.toggle('paperlight',on);$('paperBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('scr-paper',on?'1':'')}catch(e){}}
 $('paperBtn').addEventListener('click',()=>setPaper(!document.body.classList.contains('paperlight')));
 try{if(localStorage.getItem('scr-paper'))setPaper(true);}catch(e){}
@@ -1082,9 +1120,11 @@ function paginate(){const e=ep();if(!e)return 1;const br=pageBreaks(e);
 addEventListener('resize',()=>paginate());
 
 $('epList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;syncAll();S.cur=b.dataset.id;localSave();renderScript();setEdit(false,true);closeDrawer();resetDel();DESK.scrollTo({top:0});});
-$('sceneList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;if(!editing){closeDrawer();const t=$('pageView').querySelector(`[data-b="${b.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+b.dataset.b];closeDrawer();if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}});
+$('sceneList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;if(printView){closeDrawer();const t=$('pageView').querySelector(`[data-b="${b.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+b.dataset.b];closeDrawer();if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}});
 $('addScene').addEventListener('click',()=>{closeDrawer();lastEl=null;setEdit(true,true);setTimeout(newScene,50);});
 $('addEp').addEventListener('click',()=>{syncAll();setEdit(true,true);const e={id:uid(),title:'Επεισόδιο '+(S.eps.length+1),blocks:[{t:'scene',x:''}],updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();closeDrawer();setTimeout(()=>place(script.firstElementChild,0),50);});
+$('dEpTitle').addEventListener('input',e=>{const x=ep();x.title=e.target.value;markDirty(x);const on=$('epList').querySelector('.on .tx');if(on)on.textContent=x.title||'Χωρίς τίτλο';if(printView)renderPageView();});
+$('dCover').addEventListener('input',e=>{const x=ep();x.cover=e.target.value.trim()?e.target.value:null;coverEl.textContent=coverText(x);markDirty(x);if(printView)renderPageView();});
 $('epTitle').addEventListener('input',e=>{const x=ep();x.title=e.target.value;markDirty(x);$('epList').querySelector('.on .tx').textContent=x.title||'Χωρίς τίτλο';});
 $('seriesTitle').addEventListener('input',e=>{S.series=e.target.value;seriesDirty=true;markDirty(null);$('seriesLabel').textContent=S.series||'Η σειρά μου';});
 function resetDel(){$('delWrap').innerHTML='<button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button>';}
@@ -1099,7 +1139,8 @@ $('delWrap').addEventListener('click',ev=>{
 });
 $('clearExample').addEventListener('click',()=>{setEdit(true,true);const e=ep();e.blocks=[{t:'scene',x:''}];markDirty(e);renderScript();place(script.firstElementChild,0);});
 const drawer=$('drawer'),scrim=$('scrim');
-$('menuBtn').addEventListener('click',()=>{syncAll();updateSide();bkRefresh();drawer.classList.add('open');scrim.classList.add('open');});
+function openDrawer(){syncAll();updateSide();bkRefresh();drawer.classList.add('open');scrim.classList.add('open');}
+$('menuBtn').addEventListener('click',openDrawer);
 function closeDrawer(){drawer.classList.remove('open');scrim.classList.remove('open');}
 scrim.addEventListener('click',closeDrawer);
 
@@ -1242,7 +1283,7 @@ $('importFile').addEventListener('change',async ev=>{const f=ev.target.files[0];
   syncAll();const e={id:uid(),title:f.name.replace(/\.(txt|fountain)$/i,''),blocks,updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();setEdit(false,true);closeDrawer();toast('Εισήχθη ως νέο επεισόδιο');});
 
 let toastT;function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600);}
-function renderAll(){renderVocab();renderScript();setEdit(isExample||document.body.classList.contains('focus'),true);setTimeout(bkRefresh,0);updateTypes('scene');updateChips();}
+function renderAll(){renderVocab();renderScript();setEdit(isExample,true);setTimeout(bkRefresh,0);updateTypes('scene');updateChips();}
 const _ls=localSave;localSave=function(){S.example=isExample;_ls();};
 boot();
 })();
