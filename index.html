@@ -304,6 +304,9 @@ body.focus .scrim{transition:opacity .3s}
 .hnew .hcover{background:var(--fill-2);border:1px dashed var(--line);box-shadow:none}
 .hplus{font-size:38px;font-weight:300;color:var(--muted)}
 .hmeta{display:flex;flex-direction:column;gap:1px;padding:0 2px}.hmeta b{font-size:15px}.hmeta span{font-size:12px;color:var(--muted)}
+.hashap{overflow:hidden}
+.hsw{position:absolute;left:50%;top:50%;width:100%;height:100%;min-width:60px;min-height:40px;transform:translate(-50%,-50%) scale(1.6);margin:0;padding:0;opacity:.012;z-index:6;cursor:pointer;border:0}
+body.nohap .hsw{display:none}
 .dhead{display:flex;flex-direction:column;gap:8px}
 .dhead .dmeta{font-size:13px;color:var(--muted);padding:0 4px}
 .dfield{display:flex;flex-direction:column;gap:6px}
@@ -566,6 +569,7 @@ const EMPTY_ENTER={action:'scene',character:'scene',dialogue:'scene',paren:'scen
 const $=id=>document.getElementById(id);
 const uid=()=>'ep-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const up=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLocaleUpperCase('el').normalize('NFC');
+function tidOf(ev){const b=ev.target&&ev.target.closest&&ev.target.closest('button');return b?b.id:(ev.target&&ev.target.id);}
 function cleanBlock(b){const o={t:TK.includes(b&&b.t)?b.t:'action',x:String((b&&b.x)||'')};if(b&&typeof b.n==='string'&&b.n)o.n=b.n;if(b&&typeof b.s==='string'&&b.s)o.s=b.s;return o;}
 const SCENE_RE=/^(ΕΣΩΤ|ΕΞΩΤ|ΕΣ\/ΕΞ|ΕΣΩΤ\.?\/ΕΞΩΤ|INT|EXT|INT\.?\/EXT|I\/E|EST)[\.\s]/i;
 
@@ -1125,8 +1129,8 @@ $('bkFile').addEventListener('change',async ev=>{const f=ev.target.files[0];ev.t
   bkPending=d;const when=d.created?new Date(d.created).toLocaleDateString('el-GR'):'';
   $('bkConfirm').innerHTML=`<div class="confirm"><span>Βρέθηκαν ${d.episodes.length} επεισόδια (${esc(when)}). Θα προστεθούν δίπλα στα τωρινά, τίποτα δεν σβήνεται.</span><button class="yes" id="bkYes" style="background:var(--sel-bg);color:var(--sel-ink)">Επαναφορά</button><button id="bkNo">Άκυρο</button></div>`;});
 $('bkConfirm').addEventListener('click',e=>{
-  if(e.target.id==='bkNo'){bkPending=null;$('bkConfirm').innerHTML='';return;}
-  if(e.target.id!=='bkYes'||!bkPending)return;
+  if(tidOf(e)==='bkNo'){bkPending=null;$('bkConfirm').innerHTML='';return;}
+  if(tidOf(e)!=='bkYes'||!bkPending)return;
   syncAll();const d=bkPending;bkPending=null;let added=0,firstId=null;
   if(d.series&&d.series!==S.series&&!(S.eps.length===1&&!S.eps[0].blocks.some(b=>b.x.trim()))){
     let p=PROJ.find(x=>x.series===d.series);
@@ -1223,9 +1227,9 @@ $('addProj').addEventListener('click',()=>{syncAll();const e={id:uid(),title:'Ε
   const inp=$('seriesTitle');inp.focus();inp.select();toast('Νέα σειρά: δώσε της τίτλο');});
 function resetDelProj(){$('delProjWrap').innerHTML='<button class="iconbtn danger" id="delProj">Διαγραφή σειράς</button>';}
 $('delProjWrap').addEventListener('click',ev=>{
-  if(ev.target.id==='delProj'){$('delProjWrap').innerHTML=`<div class="confirm"><span>Διαγραφή όλης της σειράς «${esc(S.series)}» με ${S.eps.length} επεισόδια; Δεν αναιρείται.</span><button class="yes" id="delProjYes">Διαγραφή</button><button id="delProjNo">Άκυρο</button></div>`;}
-  else if(ev.target.id==='delProjNo')resetDelProj();
-  else if(ev.target.id==='delProjYes'){const gone=S;gone.eps.forEach(e=>dirty.add(e.id));PROJ=PROJ.filter(p=>p!==gone);deletedProj.add(gone.id);
+  if(tidOf(ev)==='delProj'){$('delProjWrap').innerHTML=`<div class="confirm"><span>Διαγραφή όλης της σειράς «${esc(S.series)}» με ${S.eps.length} επεισόδια; Δεν αναιρείται.</span><button class="yes" id="delProjYes">Διαγραφή</button><button id="delProjNo">Άκυρο</button></div>`;}
+  else if(tidOf(ev)==='delProjNo')resetDelProj();
+  else if(tidOf(ev)==='delProjYes'){const gone=S;gone.eps.forEach(e=>dirty.add(e.id));PROJ=PROJ.filter(p=>p!==gone);deletedProj.add(gone.id);
     if(!PROJ.length){const e={id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()};PROJ=[{id:'p'+Date.now().toString(36),series:'Η σειρά μου',eps:[e],cur:e.id,created:Date.now()}];dirty.add(e.id);}
     S=PROJ[0];ACT=S.id;seriesDirty=true;markDirty(null);renderScript();setEdit(false,true);resetDelProj();toast('Η σειρά διαγράφηκε');}
 });
@@ -1308,9 +1312,9 @@ $('epTitle').addEventListener('input',e=>{const x=ep();x.title=e.target.value;ma
 $('seriesTitle').addEventListener('input',e=>{S.series=e.target.value;seriesDirty=true;markDirty(null);$('seriesLabel').textContent=S.series||'Η σειρά μου';});
 function resetDel(){$('delWrap').innerHTML='<button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button>';}
 $('delWrap').addEventListener('click',ev=>{
-  if(ev.target.id==='delEp'){$('delWrap').innerHTML=`<div class="confirm"><span>Διαγραφή του «${esc(ep().title)}»;</span><button class="yes" id="delYes">Διαγραφή</button><button id="delNo">Άκυρο</button></div>`;}
-  else if(ev.target.id==='delNo')resetDel();
-  else if(ev.target.id==='delYes'){
+  if(tidOf(ev)==='delEp'){$('delWrap').innerHTML=`<div class="confirm"><span>Διαγραφή του «${esc(ep().title)}»;</span><button class="yes" id="delYes">Διαγραφή</button><button id="delNo">Άκυρο</button></div>`;}
+  else if(tidOf(ev)==='delNo')resetDel();
+  else if(tidOf(ev)==='delYes'){
     const id=S.cur;S.eps=S.eps.filter(e=>e.id!==id);dirty.add(id);seriesDirty=true;
     if(!S.eps.length)S.eps.push({id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()});
     S.cur=S.eps[0].id;markDirty(null);renderScript();resetDel();setEdit(false,true);toast('Το επεισόδιο διαγράφηκε');
@@ -1531,8 +1535,8 @@ function renderOutline(){const e=ep();const r=sceneRanges(e);
 function openOutline(){syncAll();closeDrawer();hideGhost();renderOutline();OL.hidden=false;OL.scrollTop=0;}
 function closeOutline(){OL.hidden=true;renderScript();}
 OL.addEventListener('click',ev=>{const e=ep();
-  if(ev.target.id==='olDone'){closeOutline();return;}
-  if(ev.target.id==='olAdd'){e.blocks.push({t:'scene',x:''});markDirty(e);renderOutline();const ins=OL.querySelectorAll('.oh');const last=ins[ins.length-1];if(last){last.focus();last.scrollIntoView({block:'center'});}return;}
+  if(tidOf(ev)==='olDone'){closeOutline();return;}
+  if(tidOf(ev)==='olAdd'){e.blocks.push({t:'scene',x:''});markDirty(e);renderOutline();const ins=OL.querySelectorAll('.oh');const last=ins[ins.length-1];if(last){last.focus();last.scrollIntoView({block:'center'});}return;}
   const card=ev.target.closest('.ocard');if(!card)return;const k=+card.dataset.k;
   const mv=ev.target.closest('.omv');if(mv){const y=card.getBoundingClientRect().top;if(moveScene(k,+mv.dataset.d)){renderOutline();const nc=OL.querySelector(`.ocard[data-k="${k+(+mv.dataset.d)}"]`);if(nc)OL.scrollTop+=nc.getBoundingClientRect().top-y;}return;}
   if(ev.target.closest('.ogo')){const st=sceneRanges(e)[k].start;OL.hidden=true;renderScript();setTimeout(()=>flashBlock(st),60);}});
@@ -1610,12 +1614,16 @@ function restorePos(){const y=POS[S.cur]||0;requestAnimationFrame(()=>requestAni
 
 /* ---------- #8 haptics: iPhone (iOS 18+) via a hidden system switch; vibration elsewhere ---------- */
 let hapOn=true;try{hapOn=localStorage.getItem('proza-hap')!=='0';}catch(e){}
-const HAPL=document.createElement('label');HAPL.setAttribute('aria-hidden','true');HAPL.style.cssText='position:fixed;left:-200px;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-const HAPI=document.createElement('input');HAPI.type='checkbox';HAPI.setAttribute('switch','');HAPI.tabIndex=-1;HAPL.appendChild(HAPI);document.body.appendChild(HAPL);
-function haptic(){if(!hapOn)return;try{if(navigator.vibrate&&!/iP(hone|ad|od)/.test(navigator.userAgent)){navigator.vibrate(8);return;}
-  const a=document.activeElement,sel=getSelection(),r=sel.rangeCount?sel.getRangeAt(0).cloneRange():null;HAPL.click();
-  if(a&&document.activeElement!==a){a.focus({preventScroll:true});if(r){sel.removeAllRanges();sel.addRange(r);}}}catch(e){}}
-function setHap(on){hapOn=on;$('hapBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('proza-hap',on?'1':'0')}catch(e){}if(on)haptic();}
+/* iPhone gives haptic feedback only for a real finger tap on a system switch, so every button carries an invisible one on top */
+const HAP_SEL='#fLeave,#fEdit,#fUndo,#fRedo,#fBtn,.fpanel button,.fclose,.qbtn,.pill,.add,.sheet-x,.omv,.hcard,.nmark,.acttoast button,.savesheet button,.gfill,#epList .item,#projList .item,#sceneList .item,#charList .item,.sres,.seg button,.fontpick button,.switch,.example button,.tbubble button,.vchip button,.dgrp-hap';
+function hapInto(el){if(!el||el.nodeType!==1||el.querySelector(':scope>.hsw'))return;const i=document.createElement('input');i.type='checkbox';i.setAttribute('switch','');i.className='hsw';i.tabIndex=-1;i.setAttribute('aria-hidden','true');
+  ['pointerdown','mousedown'].forEach(n=>i.addEventListener(n,e=>e.preventDefault()));el.classList.add('hashap');if(getComputedStyle(el).position==='static')el.style.position='relative';el.appendChild(i);}
+function hapScan(root){if(root.nodeType!==1)return;if(root.matches&&root.matches(HAP_SEL))hapInto(root);root.querySelectorAll&&root.querySelectorAll(HAP_SEL).forEach(hapInto);}
+new MutationObserver(ms=>{for(const m of ms)for(const n of m.addedNodes)if(n.nodeType===1&&!n.classList.contains('hsw'))hapScan(n);else if(n.nodeType===3&&m.target.matches&&m.target.matches(HAP_SEL))hapInto(m.target);}).observe(document.body,{childList:true,subtree:true});
+hapScan(document.body);
+function haptic(){if(!hapOn)return;try{if(navigator.vibrate&&!/iP(hone|ad|od)/.test(navigator.userAgent))navigator.vibrate(8);}catch(e){}}
+function setHap(on){hapOn=on;document.body.classList.toggle('nohap',!on);$('hapBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('proza-hap',on?'1':'0')}catch(e){}}
+document.body.classList.toggle('nohap',!hapOn);
 $('hapBtn').addEventListener('click',()=>setHap(!hapOn));$('hapBtn').setAttribute('aria-checked',String(hapOn));
 
 /* ---------- #1 editor typeface ---------- */
