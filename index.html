@@ -132,7 +132,7 @@ button:active{transform:scale(.97)}
 .covertitle{font-family:var(--script);font-size:14pt;font-weight:700;text-transform:uppercase;text-align:center;white-space:pre-wrap;outline:none;min-width:8ch;max-width:100%;line-height:1.5;padding:4px 8px;border-radius:6px;caret-color:var(--p-ink)}
 .covertitle:focus{background:var(--p-hl)}
 .covertitle:empty::before{content:attr(data-ph);color:var(--p-muted);opacity:.7}
-#pgmarks{position:absolute;inset:0;pointer-events:none}
+#pgmarks{position:absolute;inset:0;pointer-events:none;z-index:2}
 .pgmark{position:absolute;left:0;right:0;height:0;border-top:1px dashed var(--p-line)}
 .pgmark span,.pgfirst{position:absolute;right:.75in;font-family:var(--script);font-size:12pt;color:var(--p-muted)}
 .pgmark span{top:10px}
@@ -217,6 +217,49 @@ body.focus .toast{top:calc(env(safe-area-inset-top,0px) + 62px);bottom:auto}
 .dbody{display:flex;flex-direction:column;gap:8px;padding:2px 2px 12px}
 .dbody .lbl{font-size:12px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 4px 0}
 .dbody input#seriesTitle{font:inherit;font-size:16px;font-weight:600;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink);width:100%}
+
+/* ---- sheets, outline, ghost, notes, search, settings ---- */
+.sheet{position:fixed;inset:0;z-index:60}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+.sheet-card{position:absolute;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 14px);width:min(560px,calc(100vw - 20px));max-height:calc(var(--vvh,100vh) - env(safe-area-inset-top,0px) - 28px);display:flex;flex-direction:column;background:var(--glass-strong);backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);border:.5px solid var(--stroke);border-radius:22px;box-shadow:var(--hi),0 20px 60px rgba(0,0,0,.55);color:var(--ink)}
+html.kbd .sheet-card{max-height:calc(var(--vvh) - 20px)}
+.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 14px 6px 18px}
+.sheet-title{font-size:17px;font-weight:700;letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-x{border:0;border-radius:999px;padding:8px 14px;background:var(--sel-bg);color:var(--sel-ink);font-weight:600;font-size:14px}
+.sheet-body{overflow-y:auto;padding:4px 14px 16px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.sheet-body .lbl{font-size:12px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);font-weight:500;margin:6px 4px 0}
+.nhead{font-family:var(--script);font-weight:700;font-size:15px;padding:4px 4px 2px}
+.outline{position:fixed;inset:0;z-index:45;overflow-y:auto;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top,0px) + 10px) max(14px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 40px) max(14px,env(safe-area-inset-left,0px));overscroll-behavior:contain}
+.ol-head{position:sticky;top:calc(-10px - env(safe-area-inset-top,0px));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 4px 12px;background:var(--bg)}
+.ol-title{font-size:22px;font-weight:700;letter-spacing:-.02em}.ol-sub{font-size:13px;color:var(--muted)}
+.ol-list{display:flex;flex-direction:column;gap:10px;max-width:720px;margin:0 auto}
+.ocard{background:var(--fill-2);border:.5px solid var(--line);border-radius:16px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--hi)}
+.ohead{display:flex;align-items:center;gap:8px}
+.onum{flex:0 0 auto;min-width:26px;height:26px;border-radius:8px;background:var(--fill);display:grid;place-items:center;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.oh{flex:1;min-width:0;font:inherit;font-family:var(--script);font-weight:700;font-size:16px;text-transform:uppercase;background:transparent;border:0;color:var(--ink);padding:4px 2px}
+.oh:focus,.os:focus{outline:none}
+.omv{flex:0 0 auto;width:34px;height:34px;border-radius:999px;border:.5px solid var(--line);background:var(--fill);color:var(--ink);font-size:16px}
+.omv:disabled{opacity:.25}
+.os{font:inherit;font-size:16px;line-height:1.4;background:transparent;border:0;border-top:.5px solid var(--line);color:var(--ink);padding:8px 2px 2px;resize:none;width:100%}
+.ofoot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted)}
+.gfill{position:absolute;pointer-events:auto;white-space:pre;color:var(--p-muted);opacity:.75;text-transform:uppercase;cursor:pointer;z-index:3;padding-right:12px}
+.nmark{position:absolute;right:0;width:30px;height:30px;display:grid;place-items:center;border:0;border-radius:999px;background:transparent;color:var(--p-muted);opacity:.32;pointer-events:auto;cursor:pointer}
+.nmark.has{opacity:.9;color:var(--p-ink)}
+.nmark.has::after{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:currentColor}
+body.typing .nmark{opacity:0;pointer-events:none}
+.b.hit{background:var(--p-hl);box-shadow:0 0 0 6px var(--p-hl);transition:background .6s}
+.dsearch{font:inherit;font-size:16px;margin-top:10px;width:100%;border:.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--fill-2);color:var(--ink);-webkit-appearance:none;appearance:none}
+.dsearch:focus{outline:none;border-color:rgba(255,255,255,.35)}
+.sreslist{margin-top:6px;max-height:50vh;overflow-y:auto}
+.sres .tx{white-space:normal;display:flex;flex-direction:column;gap:2px}
+.sres .where{font-size:12px;color:var(--muted)}.sres .snip{font-size:14px;line-height:1.35}
+.sres mark{background:rgba(255,255,255,.22);color:inherit;border-radius:3px;padding:0 1px}
+.ssum{display:block;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--ui);text-transform:none}
+.cdesc{font-size:13px;color:var(--muted);padding:4px 10px}
+.cardbtn{align-self:flex-start;margin:4px 0 6px 6px}
+.seg{display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--fill-2);border:.5px solid var(--line)}
+.seg button{flex:1;border:0;border-radius:9px;padding:9px 4px;background:transparent;color:var(--muted);font-size:13.5px;font-weight:600}
+.seg button[aria-checked=true]{background:var(--sel-bg);color:var(--sel-ink);box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .dhead{display:flex;flex-direction:column;gap:8px}
 .dhead .dmeta{font-size:13px;color:var(--muted);padding:0 4px}
 .dfield{display:flex;flex-direction:column;gap:6px}
@@ -337,6 +380,8 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
         <button class="qbtn" id="printBtn" type="button" role="switch" aria-checked="false" title="Δες το επεισόδιο σε σελίδες Α4, όπως στο PDF"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/></svg><span>Προεπισκόπηση</span></button>
         <button class="qbtn" id="addScene" type="button"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Νέα σκηνή</span></button>
       </div>
+      <input type="search" id="dSearch" class="dsearch" placeholder="Αναζήτηση σε όλη τη σειρά…" autocomplete="off" aria-label="Αναζήτηση">
+      <div class="list sreslist" id="searchRes" hidden></div>
     </div>
     <section class="dsec">
       <h3>Επεισόδια</h3>
@@ -350,12 +395,13 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
         <input id="dEpTitle" autocomplete="off">
         <label class="lbl" for="dCover">Εξώφυλλο</label>
         <textarea id="dCover" rows="2" placeholder="Κενό = ο τίτλος του επεισοδίου"></textarea>
+        <button class="iconbtn" id="dVersions" type="button">Παλιότερες εκδοχές</button>
         <div id="delWrap"><button class="iconbtn danger" id="delEp">Διαγραφή επεισοδίου</button></div>
       </div>
     </details>
     <details class="dgrp">
       <summary>Σκηνές <span class="cnt" id="cntScenes"></span></summary>
-      <div class="dbody"><div class="list" id="sceneList"></div></div>
+      <div class="dbody"><button class="iconbtn" id="dOutline" type="button">Πίνακας σκηνών (σύνοψη &amp; σειρά)</button><div class="list" id="sceneList"></div></div>
     </details>
     <details class="dgrp">
       <summary>Χαρακτήρες <span class="cnt" id="cntChars"></span></summary>
@@ -390,7 +436,10 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
     <details class="dgrp">
       <summary>Ρυθμίσεις</summary>
       <div class="dbody tools">
-        <button class="switch" id="paperBtn" role="switch" aria-checked="false" type="button"><span>Λευκή σελίδα</span><span class="knob" aria-hidden="true"></span></button>
+        <label class="lbl">Χρώμα σελίδας</label>
+        <div class="seg" id="paperSeg" role="radiogroup" aria-label="Χρώμα σελίδας"><button type="button" role="radio" data-v="black">Μαύρη</button><button type="button" role="radio" data-v="white">Λευκή</button><button type="button" role="radio" data-v="auto" title="Ακολουθεί το φωτεινό/σκούρο θέμα του iPhone">Αυτόματη</button></div>
+        <label class="lbl">Μέγεθος γραμμάτων</label>
+        <div class="seg" id="fsSeg" role="radiogroup" aria-label="Μέγεθος γραμμάτων"><button type="button" role="radio" data-v="s">Μικρά</button><button type="button" role="radio" data-v="m">Κανονικά</button><button type="button" role="radio" data-v="l">Μεγάλα</button><button type="button" role="radio" data-v="xl">Πολύ</button></div>
         <button class="switch" id="acBtn" role="switch" aria-checked="true" type="button"><span>Αυτόματη διόρθωση</span><span class="knob" aria-hidden="true"></span></button>
         <p class="help">Διορθώνει και βάζει τόνους όταν πατάς κενό. Αν μια διόρθωση δεν σου αρέσει, πάτα αμέσως διαγραφή για να επανέλθει η λέξη σου. Θα σε ρωτήσει αν θέλεις να μπει στο λεξιλόγιο.</p>
         <label class="lbl">Το λεξιλόγιό μου <span id="vocabCount" class="vcount"></span></label>
@@ -402,6 +451,8 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
       <summary>Συντομεύσεις</summary>
       <div class="dbody help">
       <p><b>Τρία κενά</b> βάζουν κόμμα.</p>
+      <p>Όταν γράφεις όνομα ή σκηνή, εμφανίζεται αχνά η συνέχεια. <b>Πάτα πάνω της</b> για να συμπληρωθεί.</p>
+      <p>Το μικρό εικονίδιο δεξιά από κάθε σκηνή ανοίγει <b>σημειώσεις</b> και <b>σύνοψη</b>, που δεν τυπώνονται.</p>
       <p><b>Enter</b> πηγαίνει στο επόμενο: Σκηνή → Δράση → Χαρακτήρας → Διάλογος → Δράση → … <b>Διπλό Enter</b> ξεκινά νέα σκηνή.</p>
       <p>Γράψε <b>ΕΣΩΤ.</b> ή <b>ΕΞΩΤ.</b> και η γραμμή γίνεται σκηνή. Γράψε <b>(</b> στην αρχή διαλόγου για παρένθεση.</p>
       <p>Στον υπολογιστή: <kbd>Tab</kbd> αλλάζει τύπο, <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>6</kbd> για κάθε τύπο.</p>
@@ -435,7 +486,7 @@ body.focus .focusExit:hover,body.focus .focusExit:focus-visible{opacity:1}
 <div class="fmenu" id="fmenu">
   <button class="fbtn fedit" id="fEdit" type="button" aria-pressed="false" aria-label="Επεξεργασία" title="Επεξεργασία"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m14.5 7.5 3 3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
   <button class="fbtn fclose" id="fZoomOut" type="button" aria-label="Σμίκρυνση">−</button><button class="fbtn fclose" id="fZoomIn" type="button" aria-label="Μεγέθυνση">+</button>
-  <button class="fbtn fclose" id="fPrintClose" type="button">Κλείσιμο</button>
+  <button class="fbtn fclose" id="fRestore" type="button" hidden>Επαναφορά</button><button class="fbtn fclose" id="fPrintClose" type="button">Κλείσιμο</button>
   <button class="fbtn fur" id="fUndo" type="button" aria-label="Αναίρεση"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M9 14 4 9l5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="fbtn fur" id="fRedo" type="button" aria-label="Επανάληψη"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m15 14 5-5-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button class="fbtn" id="fBtn" type="button" aria-expanded="false" aria-haspopup="true"><span class="dot" aria-hidden="true"></span><span id="fLabel">Σκηνή</span></button>
   <div class="fpanel" id="fPanel" hidden></div>
@@ -458,6 +509,7 @@ const EMPTY_ENTER={action:'scene',character:'scene',dialogue:'scene',paren:'scen
 const $=id=>document.getElementById(id);
 const uid=()=>'ep-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const up=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLocaleUpperCase('el').normalize('NFC');
+function cleanBlock(b){const o={t:TK.includes(b&&b.t)?b.t:'action',x:String((b&&b.x)||'')};if(b&&typeof b.n==='string'&&b.n)o.n=b.n;if(b&&typeof b.s==='string'&&b.s)o.s=b.s;return o;}
 const SCENE_RE=/^(ΕΣΩΤ|ΕΞΩΤ|ΕΣ\/ΕΞ|ΕΣΩΤ\.?\/ΕΞΩΤ|INT|EXT|INT\.?\/EXT|I\/E|EST)[\.\s]/i;
 
 const SAMPLE=[
@@ -478,7 +530,7 @@ let db=null,userId=null,remote=false,isExample=false;
 const dirty=new Set(); let seriesDirty=false,saveTimer=null,saving=false;
 
 /* ---------- storage ---------- */
-function localSave(){try{localStorage.setItem('proza-projects',JSON.stringify({active:ACT,example:isExample,projects:PROJ.map(p=>({id:p.id,series:p.series,eps:p.eps,cur:p.cur}))}))}catch(e){}}
+function localSave(){try{localStorage.setItem('proza-projects',JSON.stringify({active:ACT,example:isExample,projects:PROJ.map(p=>({id:p.id,series:p.series,eps:p.eps,cur:p.cur,chars:p.chars||{}}))}))}catch(e){}}
 function localLoad(){try{const d=JSON.parse(localStorage.getItem('proza-projects')||'null');if(d&&Array.isArray(d.projects)&&d.projects.length)return d;}catch(e){}
   try{const s=JSON.parse(localStorage.getItem('scr-v1')||'null');if(s&&Array.isArray(s.eps))return {active:'main',example:!!s.example,projects:[{id:'main',series:s.series||'Η σειρά μου',eps:s.eps,cur:s.cur}]};}catch(e){}return null;}
 const allEps=()=>PROJ.flatMap(p=>p.eps);
@@ -488,7 +540,7 @@ function setSaveState(t,warn){const el=$('saveState');el.textContent=t;el.classL
 let lsT=null;function localSaveSoon(){clearTimeout(lsT);lsT=setTimeout(()=>{lsT=null;localSave();},400);}
 function localSaveNow(){if(lsT){clearTimeout(lsT);lsT=null;}syncAll();localSave();}
 addEventListener('pagehide',localSaveNow);
-function markDirty(ep){if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSaveSoon();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
+function markDirty(ep){try{verHook(ep);}catch(_){}if(ep&&ep.id===S.cur)scheduleHist();isExample=false;$('exampleNote').hidden=true;if(ep){ep.updated=Date.now();dirty.add(ep.id);}localSaveSoon();setSaveState('Αλλαγές…');clearTimeout(saveTimer);saveTimer=setTimeout(flush,1200);}
 async function flush(){
   if(saving){clearTimeout(saveTimer);saveTimer=setTimeout(flush,600);return;}
   if(!remote){setSaveState('Σε αυτή τη συσκευή');return;}
@@ -496,7 +548,7 @@ async function flush(){
   try{
     const col=db.collection('data/users/'+userId);
     if(seriesDirty){seriesDirty=false;
-      for(const pr of PROJ)await col.doc(seriesDocId(pr.id)).set({kind:'series',pid:pr.id,title:pr.series,order:pr.eps.map(e=>e.id),created:pr.created||0});
+      for(const pr of PROJ)await col.doc(seriesDocId(pr.id)).set({kind:'series',pid:pr.id,title:pr.series,order:pr.eps.map(e=>e.id),created:pr.created||0,chars:pr.chars||{}});
       for(const pid of [...deletedProj]){deletedProj.delete(pid);await col.doc(seriesDocId(pid)).delete();}}
     for(const id of [...dirty]){
       dirty.delete(id);
@@ -537,13 +589,13 @@ async function boot(){
         const metas={},byP={};
         r.docs.forEach(doc=>{const v=doc.data();if(!v)return;if(v.kind==='vocab'&&Array.isArray(v.words))mergeVocab(v.words,false);
           if(v.kind==='series'){metas[v.pid||'main']=v;}
-          else if(v.kind==='ep'){const pid=v.pid||'main';(byP[pid]=byP[pid]||[]).push({id:doc.id,title:v.title||'Επεισόδιο',cover:typeof v.cover==='string'?v.cover:null,blocks:Array.isArray(v.blocks)?v.blocks.map(b=>({t:TK.includes(b.t)?b.t:'action',x:String(b.x||'')})):[],updated:v.updated||0});}});
+          else if(v.kind==='ep'){const pid=v.pid||'main';(byP[pid]=byP[pid]||[]).push({id:doc.id,title:v.title||'Επεισόδιο',cover:typeof v.cover==='string'?v.cover:null,blocks:Array.isArray(v.blocks)?v.blocks.map(cleanBlock):[],updated:v.updated||0});}});
         const pids=Object.keys(byP);
         if(pids.length){
           const projects=pids.map(pid=>{const m=metas[pid]||{};const order=Array.isArray(m.order)?m.order:[];const eps=byP[pid];
             eps.sort((a,b)=>{const ia=order.indexOf(a.id),ib=order.indexOf(b.id);return (ia<0?1e9:ia)-(ib<0?1e9:ib)||a.updated-b.updated;});
             const lp=local&&local.projects.find(x=>x.id===pid);const cur=lp&&eps.some(e=>e.id===lp.cur)?lp.cur:eps[0].id;
-            return {id:pid,series:m.title||'Η σειρά μου',eps,cur,created:m.created||0};});
+            return {id:pid,series:m.title||'Η σειρά μου',eps,cur,created:m.created||0,chars:(m.chars&&typeof m.chars==='object')?m.chars:{}};});
           projects.sort((a,b)=>(a.id==='main'?-1:b.id==='main'?1:(a.created||0)-(b.created||0)));
           loaded={projects,active:local&&projects.some(x=>x.id===local.active)?local.active:projects[0].id};
         }else if(local&&local.projects.some(p=>p.eps.length)&&!local.example){
@@ -553,7 +605,7 @@ async function boot(){
     }
   }catch(e){}
   if(!loaded&&local&&!remote){loaded=local;if(local.example&&local.projects.length===1){isExample=true;$('exampleNote').hidden=false;}}
-  if(loaded){PROJ=loaded.projects.map(p=>({id:p.id,series:p.series||'Η σειρά μου',eps:(p.eps&&p.eps.length)?p.eps:[{id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()}],cur:p.cur,created:p.created||0}));
+  if(loaded){PROJ=loaded.projects.map(p=>({id:p.id,series:p.series||'Η σειρά μου',eps:(p.eps&&p.eps.length)?p.eps:[{id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()}],cur:p.cur,created:p.created||0,chars:(p.chars&&typeof p.chars==='object')?p.chars:{}}));
     PROJ.forEach(p=>{if(!p.eps.some(e=>e.id===p.cur))p.cur=p.eps[0].id;});
     S=PROJ.find(p=>p.id===loaded.active)||PROJ[0];ACT=S.id;}
   else{
@@ -603,7 +655,7 @@ script.addEventListener('keydown',ev=>{
   if((ev.key==='Enter'||ev.keyCode===13)&&!ev.shiftKey&&!TOUCH){
     ev.preventDefault();const sp=selSpan();if(sp&&sp.multi){const el2=deleteSpan(sp);doEnter(el2,sp.a.off,sp.a.off);return;}doEnter(el);return;
   }
-  if(ev.key==='Tab'){ev.preventDefault();const k=TK.indexOf(b.t);setType(el,TK[(k+(ev.shiftKey?TK.length-1:1))%TK.length]);return;}
+  if(ev.key==='Tab'){ev.preventDefault();if(!ev.shiftKey&&ghostAccept())return;const k=TK.indexOf(b.t);setType(el,TK[(k+(ev.shiftKey?TK.length-1:1))%TK.length]);return;}
   if((ev.ctrlKey||ev.metaKey)&&/^[1-6]$/.test(ev.key)){ev.preventDefault();setType(el,TK[+ev.key-1]);return;}
   if(ev.key==='Backspace'&&i>0){
     const a=caret(el),z=caretEnd(el);
@@ -614,9 +666,9 @@ script.addEventListener('keydown',ev=>{
     ev.preventDefault();const nx=script.children[i+1];syncEl(el);b.x+=nx.textContent;const l=el.textContent.length;el.textContent=b.x;e.blocks.splice(i+1,1);nx.remove();place(el,l);markDirty(e);updateSide();return;}
 });
 function mergeUp(el){const e=ep(),i=idx(el);if(i<=0)return;const prev=script.children[i-1];syncEl(prev);syncEl(el);
-  const pb=e.blocks[i-1],pl=pb.x.length;pb.x+=el.textContent;prev.textContent=pb.x;e.blocks.splice(i,1);el.remove();place(prev,pl);markDirty(e);updateSide();onFocusChange();}
+  const pb=e.blocks[i-1],cb=e.blocks[i],pl=pb.x.length;if(cb.n&&!pb.n)pb.n=cb.n;if(cb.s&&!pb.s)pb.s=cb.s;pb.x+=el.textContent;prev.textContent=pb.x;e.blocks.splice(i,1);el.remove();place(prev,pl);markDirty(e);updateSide();onFocusChange();}
 function mergeDown(el){const e=ep(),i=idx(el);if(i<0||i>=e.blocks.length-1)return;const nx=script.children[i+1];syncEl(el);syncEl(nx);
-  const b=e.blocks[i],l=b.x.length;b.x+=nx.textContent;el.textContent=b.x;e.blocks.splice(i+1,1);nx.remove();place(el,l);markDirty(e);updateSide();}
+  const b=e.blocks[i],nb2=e.blocks[i+1],l=b.x.length;if(nb2.n&&!b.n)b.n=nb2.n;if(nb2.s&&!b.s)b.s=nb2.s;b.x+=nx.textContent;el.textContent=b.x;e.blocks.splice(i+1,1);nx.remove();place(el,l);markDirty(e);updateSide();}
 function blockAt(container,offset,isEnd){
   if(container===script){const ch=script.children;if(!ch.length)return null;let i=isEnd?offset-1:offset;i=Math.max(0,Math.min(ch.length-1,i));return {el:ch[i],off:isEnd&&offset>0?ch[i].textContent.length:0};}
   let n=container;while(n&&n.parentNode!==script)n=n.parentNode;if(!n)return null;
@@ -655,9 +707,9 @@ function reconcile(){const e=ep();const out=[];
 const TOUCH=matchMedia('(pointer:coarse)').matches;let enterGuard=null;
 let lastEnterAt=-1e9;
 /* right after Enter, if the iPhone keyboard puts the cursor back at the end of the previous line, move it into the new line */
-document.addEventListener('selectionchange',()=>{const g=enterGuard;if(!g||Date.now()-g.t>600||!g.to.isConnected)return;
+document.addEventListener('selectionchange',()=>{const g=enterGuard;if(!g||Date.now()-g.t>450||!g.to.isConnected)return;
   const s=getSelection();if(!s.rangeCount||!s.getRangeAt(0).collapsed)return;
-  if(cur()===g.from&&g.from.textContent===g.fromText&&caret(g.from)===g.from.textContent.length)place(g.to,0);});
+  if(g.to.textContent===''&&cur()===g.from&&g.from.textContent===g.fromText&&caret(g.from)===g.from.textContent.length)place(g.to,0);});
 function doEnter(el,a,z){
   const e=ep(),i=idx(el);if(i<0)return;const b=e.blocks[i];
   const text=el.textContent.replace(/\n/g,'');if(a==null){a=caret(el);z=caretEnd(el);}
@@ -668,7 +720,7 @@ function doEnter(el,a,z){
   b.x=before;el.textContent=before;
   const nb={t:nt,x:after};e.blocks.splice(i+1,0,nb);const n=mk(nb);el.after(n);place(n,0);
   enterGuard={from:el,to:n,fromText:el.textContent,t:Date.now()};
-  requestAnimationFrame(()=>{if(n.isConnected&&cur()!==n&&cur()===el)place(n,0);});setTimeout(()=>{if(n.isConnected&&cur()===el&&el.textContent===enterGuard?.fromText)place(n,0);},60);
+  if(!after.trim()){requestAnimationFrame(()=>{if(n.isConnected&&n.textContent===''&&cur()===el)place(n,0);});setTimeout(()=>{if(n.isConnected&&n.textContent===''&&cur()===el&&el.textContent===enterGuard?.fromText)place(n,0);},60);}
   markDirty(e);updateSide();onFocusChange();
 }
 /* iOS / Android keyboards often skip keydown for Return: catch it before and after it is inserted */
@@ -973,7 +1025,7 @@ script.addEventListener('input',ev=>{
 });
 /* ---------- undo / redo: snapshots of the episode taken after each pause or structural change ---------- */
 let hist=[],hp=-1,histEp=null,histT=null,restoring=false;
-function snap(){const e=ep();const el=cur();return {blocks:e.blocks.map(b=>({t:b.t,x:b.x})),bi:el?idx(el):-1,off:el?caret(el):0};}
+function snap(){const e=ep();const el=cur();return {blocks:e.blocks.map(b=>({...b})),bi:el?idx(el):-1,off:el?caret(el):0};}
 function same(a,b){if(a.length!==b.length)return false;for(let i=0;i<a.length;i++)if(a[i].t!==b[i].t||a[i].x!==b[i].x)return false;return true;}
 function histReset(){if(!ep())return;hist=[snap()];hp=0;histEp=S.cur;updUR();}
 function histPush(){clearTimeout(histT);histT=null;if(restoring||!ep())return;if(histEp!==S.cur){histReset();return;}
@@ -981,7 +1033,7 @@ function histPush(){clearTimeout(histT);histT=null;if(restoring||!ep())return;if
   hist=hist.slice(0,hp+1);hist.push(sn);if(hist.length>200)hist.shift();hp=hist.length-1;updUR();}
 function scheduleHist(){if(restoring)return;clearTimeout(histT);const last=hist[hp],e=ep();
   if(last&&e&&last.blocks.length!==e.blocks.length){histPush();return;}histT=setTimeout(histPush,600);}
-function restore(sn){restoring=true;const e=ep();syncAll();e.blocks=sn.blocks.map(b=>({t:b.t,x:b.x}));renderScript();
+function restore(sn){restoring=true;const e=ep();syncAll();e.blocks=sn.blocks.map(b=>({...b}));renderScript();
   const el=script.children[Math.max(0,Math.min(sn.bi<0?e.blocks.length-1:sn.bi,e.blocks.length-1))];if(el)place(el,Math.min(sn.off,el.textContent.length));
   markDirty(e);restoring=false;updUR();}
 function undo(){if(!editing)return;if(histT){histPush();}if(hp>0){hp--;restore(hist[hp]);}else toast('Δεν υπάρχει κάτι για αναίρεση');}
@@ -1003,7 +1055,7 @@ function bkRefresh(){$('bkInfo').textContent='Τελευταίο αντίγρα�
   $('bkNoteText').textContent=lb?('Το τελευταίο αντίγραφο ασφαλείας ήταν '+ago(lb)+'.'):'Δεν έχεις κρατήσει ακόμα αντίγραφο ασφαλείας του σεναρίου σου.';
   $('bkNote').hidden=!show;}
 async function doBackup(){syncAll();
-  const data={app:'Proza',version:1,created:new Date().toISOString(),series:S.series,episodes:S.eps.map(e=>({id:e.id,title:e.title,cover:e.cover==null?null:e.cover,blocks:e.blocks,updated:e.updated||0})),vocab};
+  const data={app:'Proza',version:1,created:new Date().toISOString(),series:S.series,episodes:S.eps.map(e=>({id:e.id,title:e.title,cover:e.cover==null?null:e.cover,blocks:e.blocks,updated:e.updated||0})),vocab,chars:S.chars||{}};
   const name=fname('Proza - '+(S.series||'σειρά'))+'.json';
   if(await offer(name,JSON.stringify(data))){lsSet(BK_KEY,String(Date.now()));bkRefresh();toast('Το αντίγραφο ασφαλείας αποθηκεύτηκε');}}
 $('bkBtn').addEventListener('click',doBackup);
@@ -1025,12 +1077,13 @@ $('bkConfirm').addEventListener('click',e=>{
     if(!p){p={id:'p'+Date.now().toString(36),series:d.series,eps:[],cur:null,created:Date.now()};PROJ.push(p);}
     S=p;ACT=p.id;}
   d.episodes.forEach(x=>{if(!x||!Array.isArray(x.blocks))return;
-    const blocks=x.blocks.map(b=>({t:TK.includes(b&&b.t)?b.t:'action',x:String((b&&b.x)||'')}));
+    const blocks=x.blocks.map(cleanBlock);
     const ex=S.eps.find(e=>e.id===x.id);
     if(ex&&same(ex.blocks,blocks))return;
     const ne={id:ex||!x.id?uid():x.id,title:(x.title||'Επεισόδιο')+(ex?' (από αντίγραφο)':''),cover:x.cover==null?null:x.cover,blocks,updated:Date.now()};
     S.eps.push(ne);dirty.add(ne.id);added++;if(!firstId)firstId=ne.id;});
   if(Array.isArray(d.vocab))mergeVocab(d.vocab);
+  if(d.chars&&typeof d.chars==='object')S.chars=Object.assign({},d.chars,S.chars||{});
   if((!S.series||S.series==='Η σειρά μου'||/^Νέα σειρά/.test(S.series))&&d.series)S.series=d.series;
   if(!S.eps.length){PROJ=PROJ.filter(x=>x.eps.length);S=PROJ[0];ACT=S.id;$('bkConfirm').innerHTML='';toast('Το αντίγραφο δεν είχε επεισόδια');return;}
   $('bkConfirm').innerHTML='';
@@ -1045,7 +1098,7 @@ if(window.visualViewport){const vm=document.querySelector('meta[name=viewport]')
 const EDIT_CE=script.contentEditable;let editing=true;
 /* reading view: the episode drawn as real A4 pages (same layout, wrapping and page breaks as the PDF), scaled to fit */
 const PVX={scene:0,action:0,character:211,dialogue:96,paren:154,transition:0};
-function renderPageView(){const box=$('pageView');if(!box||!printView)return;const e=ep();if(!e)return;
+function renderPageView(){const box=$('pageView');if(!box||!printView)return;const e=pvSource||ep();if(!e)return;
   const br=new Set(pageBreaks(e));let html='',page=1,top=true,sn=0;
   const sheetOpen=n=>`<div class="pv-wrap"><div class="pv-sheet">${n?`<span class="pv-num">${n}.</span>`:''}`;
   html+=sheetOpen(0).replace('pv-sheet','pv-sheet pv-cover')+esc(up(coverText(e)||''))+'</div></div>';
@@ -1076,15 +1129,15 @@ function zoomTo(z,cx,cy){z=Math.max(1,Math.min(4,z));const r=DESK.getBoundingCli
   const mid=()=>{const r=DESK.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];};
   $('fZoomIn').addEventListener('click',()=>zoomTo(pvZoom*1.4,...mid()));$('fZoomOut').addEventListener('click',()=>zoomTo(pvZoom/1.4,...mid()));})();
 addEventListener('resize',()=>{if(printView)fitPageView();});
-let printView=false;
-function setPrint(on){printView=on;pvZoom=1;document.body.classList.toggle('printview',on);$('printBtn').setAttribute('aria-checked',String(on));$('pageView').hidden=!on;
+let printView=false,pvSource=null;
+function setPrint(on,keep){if(!keep||!on)pvSource=null;$('fRestore').hidden=!(on&&pvSource&&pvSource.ver);printView=on;pvZoom=1;if(typeof hideGhost==='function')hideGhost();document.body.classList.toggle('printview',on);$('printBtn').setAttribute('aria-checked',String(on));$('pageView').hidden=!on;
   if(on){if(editing)setEdit(false,true);renderPageView();DESK.scrollTo({top:0});}else{DESK.scrollTo({top:0});}}
 $('printBtn').addEventListener('click',()=>{setPrint(!printView);closeDrawer();});
 $('fPrintClose').addEventListener('click',()=>setPrint(false));
 $('dSave').addEventListener('click',()=>{closeDrawer();doBackup();});
 $('dNewSeries').addEventListener('click',()=>{const g=$('projList').closest('details');g.open=true;$('addProj').click();setTimeout(()=>$('seriesTitle').scrollIntoView({block:'center',behavior:'smooth'}),50);});
 $('dSwitchSeries').addEventListener('click',()=>{const g=$('projList').closest('details');g.open=true;g.scrollIntoView({block:'start',behavior:'smooth'});});
-function setEdit(on,quiet){if(on&&printView)setPrint(false);editing=on;document.body.classList.toggle('reading',!on);$('fEdit').setAttribute('aria-pressed',String(on));$('fEdit').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
+function setEdit(on,quiet){try{if(on&&!editing)verArm();if(!on)hideGhost();}catch(_){}if(on&&printView)setPrint(false);editing=on;document.body.classList.toggle('reading',!on);$('fEdit').setAttribute('aria-pressed',String(on));$('fEdit').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   script.contentEditable=on?EDIT_CE:'false';coverEl.contentEditable=on?'true':'false';
   $('editBtn').setAttribute('aria-pressed',String(on));$('editBtn').title=on?'Τέλος επεξεργασίας':'Επεξεργασία';
   if(!on){if(document.activeElement===script||document.activeElement===coverEl)document.activeElement.blur();if(typeof hideBubble==='function')hideBubble();}
@@ -1106,7 +1159,7 @@ script.addEventListener('focusout',()=>{clearTimeout(edT);edT=setTimeout(()=>{if
 /* ---------- side panels ---------- */
 function renderProjects(){const box=$('projList');if(!box)return;
   box.innerHTML=PROJ.map(p=>`<button class="item ${p.id===ACT?'on':''}" data-pid="${p.id}"><span class="tx">${esc(p.series||'Χωρίς τίτλο')}</span><span class="c">${p.eps.length} επ.</span></button>`).join('');}
-function switchProject(pid){const p=PROJ.find(x=>x.id===pid);if(!p||p===S)return;syncAll();S=p;ACT=p.id;isExample=false;$('exampleNote').hidden=true;localSave();renderScript();setEdit(false,true);bkRefresh();}
+function switchProject(pid){const p=PROJ.find(x=>x.id===pid);if(!p||p===S)return;syncAll();S=p;ACT=p.id;isExample=false;$('exampleNote').hidden=true;localSave();renderScript();setEdit(false,true);bkRefresh();restorePos();}
 $('projList').addEventListener('click',ev=>{const b=ev.target.closest('[data-pid]');if(!b)return;switchProject(b.dataset.pid);resetDelProj();});
 $('addProj').addEventListener('click',()=>{syncAll();const e={id:uid(),title:'Επεισόδιο 1',blocks:[{t:'scene',x:''}],updated:Date.now()};
   const p={id:'p'+Date.now().toString(36),series:'Νέα σειρά '+(PROJ.length+1),eps:[e],cur:e.id,created:Date.now()};PROJ.push(p);
@@ -1125,7 +1178,7 @@ function updateSide(){
   $('epTitle').value=e.title;$('seriesLabel').textContent=S.series||'Η σειρά μου';
   if(document.activeElement!==$('seriesTitle'))$('seriesTitle').value=S.series;
   $('epList').innerHTML=S.eps.map((x,i)=>`<button class="item ${x.id===S.cur?'on':''}" data-id="${x.id}"><span class="n">${i+1}</span><span class="tx">${esc(x.title||'Χωρίς τίτλο')}</span></button>`).join('');
-  let n=0;const sc=[];e.blocks.forEach((b,i)=>{if(b.t==='scene'){n++;sc.push(`<button class="item" data-b="${i}"><span class="n">${n}</span><span class="tx">${esc(up(b.x)||'Νέα σκηνή')}</span></button>`);}});
+  let n=0;const sc=[];e.blocks.forEach((b,i)=>{if(b.t==='scene'){n++;sc.push(`<button class="item" data-b="${i}"><span class="n">${n}</span><span class="tx">${esc(up(b.x)||'Νέα σκηνή')}${b.s?`<span class="ssum">${esc(b.s)}</span>`:''}</span>${b.n?'<span class="c">✎</span>':''}</button>`);}});
   $('sceneList').innerHTML=sc.join('')||'<span class="help">Δεν υπάρχουν σκηνές ακόμα.</span>';
   if(document.getElementById('drawer').classList.contains('open'))renderChars();
   if(document.activeElement!==$('dEpTitle'))$('dEpTitle').value=e.title;if(document.activeElement!==$('dCover'))$('dCover').value=e.cover==null?'':e.cover;
@@ -1152,7 +1205,8 @@ function renderChars(){
   if(!list.length){$('charList').innerHTML='<span class="help">Οι χαρακτήρες εμφανίζονται εδώ μόλις μιλήσουν.</span>';return;}
   $('charList').innerHTML=list.map(([k,v])=>{
     const ns=v.scenes.length;let inner='';
-    if(openChar===k){let lastEp=null;inner='<div class="charscenes">'+v.scenes.map(s=>{let h='';if(S.eps.length>1&&s.ep!==lastEp){lastEp=s.ep;h+=`<div class="ep">${esc(S.eps[s.ei].title||('Επεισόδιο '+(s.ei+1)))}</div>`;}
+    const card=(S.chars||{})[k];
+    if(openChar===k){let lastEp=null;inner='<div class="charscenes">'+(card&&(card.age||card.desc)?`<div class="cdesc">${esc([card.age?card.age+' ετών':'',card.desc||''].filter(Boolean).join(' · '))}</div>`:'')+`<button type="button" class="pill cardbtn" data-card="${esc(k)}">${card?'Καρτέλα χαρακτήρα':'+ Καρτέλα χαρακτήρα'}</button>`+v.scenes.map(s=>{let h='';if(S.eps.length>1&&s.ep!==lastEp){lastEp=s.ep;h+=`<div class="ep">${esc(S.eps[s.ei].title||('Επεισόδιο '+(s.ei+1)))}</div>`;}
       return h+`<button class="item ${s.ep===S.cur?'here':''}" data-ep="${s.ep}" data-b="${s.bi}"><span class="n">${s.sn||'–'}</span><span class="tx">${esc(s.head)}</span>${s.speaks?'':'<span class="tag">αναφορά</span>'}</button>`;}).join('')+(ns?'':'<span class="help">Δεν εμφανίζεται ακόμα σε σκηνή.</span>')+'</div>';}
     return `<div class="charrow ${openChar===k?'open':''}"><button class="item" data-ch="${esc(k)}" aria-expanded="${openChar===k}"><span class="tx">${esc(k)}</span><span class="c">${v.lines} ατ. · ${ns} σκ.</span></button>${inner}</div>`;}).join('');
 }
@@ -1167,9 +1221,6 @@ $('focusBtn').addEventListener('click',()=>setFocus(true));
 $('focusExit').addEventListener('click',()=>setFocus(false));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('focus'))setFocus(false);});
 document.body.classList.add('focus');
-function setPaper(on){document.body.classList.toggle('paperlight',on);document.documentElement.classList.toggle('paperlight',on);$('paperBtn').setAttribute('aria-checked',String(on));try{localStorage.setItem('scr-paper',on?'1':'')}catch(e){}}
-$('paperBtn').addEventListener('click',()=>setPaper(!document.body.classList.contains('paperlight')));
-try{if(localStorage.getItem('scr-paper'))setPaper(true);}catch(e){}
 const PW={scene:61,action:61,character:38,dialogue:35,paren:26,transition:61},PG={scene:2,action:1,character:1,dialogue:0,paren:0,transition:1},PAGE_LINES=55;
 function wrapLines(text,w){const out=[];text.split('\n').forEach(par=>{let cur='';par.split(/\s+/).filter(Boolean).forEach(word=>{while(word.length>w){if(cur){out.push(cur);cur='';}out.push(word.slice(0,w));word=word.slice(w);}if(!cur)cur=word;else if(cur.length+1+word.length>w){out.push(cur);cur=word;}else cur+=' '+word;});out.push(cur);});return out.length?out:[''];}
 function blockLines(b){return Math.max(1,wrapLines(b.t==='paren'&&b.x.trim()?'('+b.x.trim()+')':b.x,PW[b.t]).length)+(b.t==='scene'?1:0);}
@@ -1185,11 +1236,13 @@ function pageBreaks(e){const B=e.blocks,br=[];let used=0,start=0;const STICKY={s
 let pgT=null;
 function paginate(){const e=ep();if(!e)return 1;const br=pageBreaks(e);
   cancelAnimationFrame(pgT);pgT=requestAnimationFrame(()=>{const box=$('pgmarks');if(!box)return;let h='<span class="pgfirst">1.</span>';
-    br.forEach((bi,k)=>{const el=script.children[bi];if(!el)return;const mt=parseFloat(getComputedStyle(el).marginTop)||0;const y=el.offsetTop-mt/2-6;h+=`<div class="pgmark" style="top:${y}px"><span>${k+2}.</span></div>`;});box.innerHTML=h;});
+    br.forEach((bi,k)=>{const el=script.children[bi];if(!el)return;const mt=parseFloat(getComputedStyle(el).marginTop)||0;const y=el.offsetTop-mt/2-6;h+=`<div class="pgmark" style="top:${y}px"><span>${k+2}.</span></div>`;});const NOTE='<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 11h7M9 15h5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+    e.blocks.forEach((b,i)=>{if(b.t!=='scene')return;const el=script.children[i];if(!el)return;const lh=parseFloat(getComputedStyle(el).lineHeight)||20;h+=`<button type="button" class="nmark${b.n||b.s?' has':''}" data-b="${i}" style="top:${el.offsetTop+(lh-30)/2}px" aria-label="Σημειώσεις σκηνής">${NOTE}</button>`;});
+    box.innerHTML=h;});
   return br.length+1;}
 addEventListener('resize',()=>paginate());
 
-$('epList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;syncAll();S.cur=b.dataset.id;localSave();renderScript();setEdit(false,true);closeDrawer();resetDel();DESK.scrollTo({top:0});});
+$('epList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;syncAll();S.cur=b.dataset.id;localSave();renderScript();setEdit(false,true);closeDrawer();resetDel();restorePos();});
 $('sceneList').addEventListener('click',ev=>{const b=ev.target.closest('.item');if(!b)return;if(printView){closeDrawer();const t=$('pageView').querySelector(`[data-b="${b.dataset.b}"]`);if(t)t.scrollIntoView({block:'start',behavior:'smooth'});return;}const el=script.children[+b.dataset.b];closeDrawer();if(el){el.scrollIntoView({block:'start',behavior:'smooth'});setTimeout(()=>place(el,el.textContent.length),350);}});
 $('addScene').addEventListener('click',()=>{closeDrawer();lastEl=null;setEdit(true,true);setTimeout(newScene,50);});
 $('addEp').addEventListener('click',()=>{syncAll();setEdit(true,true);const e={id:uid(),title:'Επεισόδιο '+(S.eps.length+1),blocks:[{t:'scene',x:''}],updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();closeDrawer();setTimeout(()=>place(script.firstElementChild,0),50);});
@@ -1223,6 +1276,8 @@ function parseFountain(text){
     let l=lines[i];const t=l.trim();
     if(!t){i++;continue;}
     if(/^title:|^author:|^credit:|^draft date:/i.test(t)&&out.length===0){while(i<lines.length&&lines[i].trim())i++;continue;}
+    if(/^=(?!=)/.test(t)){const sc=[...out].reverse().find(b=>b.t==='scene');if(sc)sc.s=(sc.s?sc.s+' ':'')+t.replace(/^=\s*/,'');i++;continue;}
+    if(/^\[\[/.test(t)){let note=t;while(!/\]\]$/.test(note)&&i+1<lines.length){i++;note+='\n'+lines[i].trim();}const sc=[...out].reverse().find(b=>b.t==='scene');if(sc)sc.n=(sc.n?sc.n+'\n':'')+note.replace(/^\[\[\s*/,'').replace(/\s*\]\]$/,'');i++;continue;}
     if(isScene(t)){out.push({t:'scene',x:t.replace(/^\./,'').replace(/\s+#.*#$/,'')});i++;continue;}
     if(/^>/.test(t)&&!/<$/.test(t)){out.push({t:'transition',x:t.replace(/^>\s*/,'')});i++;continue;}
     if(/(TO:|ΣΕ:)$/.test(t)&&t===up(t)&&(!lines[i+1]||!lines[i+1].trim())){out.push({t:'transition',x:t});i++;continue;}
@@ -1245,7 +1300,7 @@ function toFountain(e){
   let sn=0;
   e.blocks.forEach((b,i)=>{const x=b.x.trim();if(b.t==='scene')sn++;if(!x&&b.t!=='action')return;
     switch(b.t){
-      case 'scene':{const h=up(x);s+='\n'+(/^(INT|EXT|EST|INT\.?\/EXT|I\/E)[\.\s]/.test(h)?h:'.'+h)+' #'+sn+'#\n\n';break;}
+      case 'scene':{const h=up(x);s+='\n'+(/^(INT|EXT|EST|INT\.?\/EXT|I\/E)[\.\s]/.test(h)?h:'.'+h)+' #'+sn+'#\n\n';if(b.s)s+='= '+b.s.replace(/\n/g,' ')+'\n\n';if(b.n)s+='[['+b.n+']]\n\n';break;}
       case 'action':if(x)s+=x+'\n\n';break;
       case 'character':{const c=up(x);s+=(/^[A-Z0-9 .'()\-]+$/.test(c)?c:'@'+c)+'\n';break;}
       case 'paren':s+='('+x+')\n';break;
@@ -1353,8 +1408,149 @@ $('importFile').addEventListener('change',async ev=>{const f=ev.target.files[0];
   syncAll();const e={id:uid(),title:f.name.replace(/\.(txt|fountain)$/i,''),blocks,updated:Date.now()};S.eps.push(e);S.cur=e.id;seriesDirty=true;markDirty(e);renderScript();setEdit(false,true);closeDrawer();toast('Εισήχθη ως νέο επεισόδιο');});
 
 let toastT;function toast(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600);}
-function renderAll(){renderVocab();renderScript();setEdit(isExample,true);setTimeout(bkRefresh,0);updateTypes('scene');updateChips();}
+function renderAll(){renderVocab();renderScript();setTimeout(restorePos,0);setEdit(isExample,true);setTimeout(bkRefresh,0);updateTypes('scene');updateChips();}
 const _ls=localSave;localSave=function(){S.example=isExample;_ls();};
+/* ================= new features ================= */
+const clone=o=>JSON.parse(JSON.stringify(o));
+const norm=s=>String(s).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/ς/g,'σ');
+function sceneNoAt(e,bi){let n=0;for(let i=0;i<=bi&&i<e.blocks.length;i++)if(e.blocks[i].t==='scene')n++;return n;}
+function flashBlock(i){const el=script.children[i];if(!el)return;el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('hit');setTimeout(()=>el.classList.remove('hit'),1600);}
+function gotoBlock(epId,bi){if(printView)setPrint(false);if(epId!==S.cur){syncAll();S.cur=epId;localSave();renderScript();}closeDrawer();setTimeout(()=>flashBlock(bi),60);}
+
+/* ---------- bottom sheet (notes, character cards, versions) ---------- */
+const SH=document.createElement('div');SH.className='sheet';SH.hidden=true;
+SH.innerHTML='<div class="sheet-bg"></div><div class="sheet-card" role="dialog" aria-modal="true"><div class="sheet-head"><span class="sheet-title"></span><button type="button" class="sheet-x">Τέλος</button></div><div class="sheet-body"></div></div>';
+document.body.appendChild(SH);let shClose=null;
+function openSheet(title,html,onClose){if(typeof hideGhost==='function')hideGhost();SH.querySelector('.sheet-title').textContent=title;const b=SH.querySelector('.sheet-body');b.innerHTML=html;b.scrollTop=0;SH.hidden=false;shClose=onClose||null;return b;}
+function closeSheet(){if(SH.hidden)return;if(document.activeElement&&SH.contains(document.activeElement))document.activeElement.blur();SH.hidden=true;const f=shClose;shClose=null;if(f)f();}
+SH.querySelector('.sheet-bg').addEventListener('click',closeSheet);SH.querySelector('.sheet-x').addEventListener('click',closeSheet);
+
+/* ---------- #2 version history (IndexedDB, on this device) ---------- */
+const VDB=(()=>{let p=null;const db=()=>p||(p=new Promise((res,rej)=>{if(!window.indexedDB)return rej(new Error('no idb'));const r=indexedDB.open('proza-versions',1);r.onupgradeneeded=()=>{const st=r.result.createObjectStore('v',{keyPath:'k'});st.createIndex('ep','ep');};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}));
+  const tx=async(mode,fn)=>{const d=await db();return new Promise((res,rej)=>{const t=d.transaction('v',mode);const out=fn(t.objectStore('v'));t.oncomplete=()=>res(out&&out.result!==undefined?out.result:out);t.onerror=()=>rej(t.error);});};
+  return {put:v=>tx('readwrite',st=>st.put(v)),del:k=>tx('readwrite',st=>st.delete(k)),byEp:async ep=>{const d=await db();return new Promise((res,rej)=>{const r=d.transaction('v').objectStore('v').index('ep').getAll(ep);r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);});}};})();
+const VER_EVERY=30*60*1000,VER_KEEP=40;let verPending=null;const lastVerAt={};
+async function verSave(e,blocks,reason){try{const list=(await VDB.byEp(e.id)).sort((a,b)=>b.t-a.t);
+  const sig=JSON.stringify(blocks);if(list[0]&&JSON.stringify(list[0].blocks)===sig){lastVerAt[e.id]=Date.now();return;}
+  if(!blocks.some(b=>b.x.trim()))return;
+  await VDB.put({k:e.id+'|'+Date.now(),ep:e.id,t:Date.now(),title:e.title,cover:e.cover==null?null:e.cover,blocks:clone(blocks),reason});lastVerAt[e.id]=Date.now();
+  for(const old of list.slice(VER_KEEP-1))await VDB.del(old.k);}catch(err){}}
+function verHook(e){if(!e||restoring)return;if(verPending&&verPending.ep===e.id){const vp=verPending;verPending=null;verSave(e,vp.blocks,'πριν από τις αλλαγές');return;}
+  if(Date.now()-(lastVerAt[e.id]||0)>VER_EVERY){lastVerAt[e.id]=Date.now();setTimeout(()=>verSave(e,e.blocks,'αυτόματο'),0);}}
+function verArm(){const e=ep();if(e){verPending={ep:e.id,blocks:clone(e.blocks)};if(!lastVerAt[e.id])lastVerAt[e.id]=Date.now();}}
+const fmtWhen=t=>new Date(t).toLocaleString('el-GR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+async function openVersions(){syncAll();const e=ep();let list=[];try{list=(await VDB.byEp(e.id)).sort((a,b)=>b.t-a.t);}catch(err){}
+  const body=openSheet('Παλιότερες εκδοχές',list.length?('<p class="help">Πάτα μια εκδοχή για να τη δεις σε σελίδες. Από εκεί μπορείς να την επαναφέρεις.</p><div class="list">'+list.map(v=>`<button class="item" data-k="${esc(v.k)}"><span class="tx">${esc(fmtWhen(v.t))}</span><span class="c">${pageBreaks({blocks:v.blocks}).length+1} σελ.</span></button>`).join('')+'</div>'):'<p class="help">Δεν υπάρχουν ακόμα παλιότερες εκδοχές. Η Proza κρατάει μόνη της μία κάθε φορά που ξεκινάς να γράφεις σε ένα επεισόδιο, και μία κάθε μισή ώρα γραψίματος.</p>');
+  body.querySelector('.list')&&body.querySelector('.list').addEventListener('click',ev=>{const b=ev.target.closest('[data-k]');if(!b)return;const v=list.find(x=>x.k===b.dataset.k);if(!v)return;closeSheet();closeDrawer();
+    pvSource={id:e.id,title:v.title,cover:v.cover,blocks:v.blocks,ver:v};setPrint(true,true);toast('Εκδοχή: '+fmtWhen(v.t));});}
+$('fRestore').addEventListener('click',async()=>{if(!pvSource||!pvSource.ver)return;const e=ep();syncAll();
+  await verSave(e,e.blocks,'πριν από επαναφορά');const v=pvSource.ver;e.blocks=v.blocks.map(cleanBlock);if(v.cover!==undefined)e.cover=v.cover;
+  setPrint(false);renderScript();markDirty(e);toast('Επανήλθε η εκδοχή της '+fmtWhen(v.t));});
+$('dVersions').addEventListener('click',openVersions);
+
+/* ---------- #4 scene notes ---------- */
+function openNote(bi){const e=ep();const b=e.blocks[bi];if(!b||b.t!=='scene')return;const n=sceneNoAt(e,bi);
+  const body=openSheet('Σκηνή '+n,`<div class="dfield"><div class="nhead">${esc(up(b.x)||'Νέα σκηνή')}</div>
+    <label class="lbl" for="nSum">Σύνοψη</label><input id="nSum" placeholder="Μία γραμμή: τι γίνεται εδώ" value="${esc(b.s||'')}" autocomplete="off">
+    <label class="lbl" for="nTxt">Σημειώσεις</label><textarea id="nTxt" rows="7" placeholder="Ιδέες, έρευνα, τι θέλεις να αλλάξεις… Δεν τυπώνονται.">${esc(b.n||'')}</textarea></div>`,()=>paginate());
+  const upd=()=>{const s1=body.querySelector('#nSum').value.trim(),n1=body.querySelector('#nTxt').value;if(s1)b.s=s1;else delete b.s;if(n1.trim())b.n=n1;else delete b.n;markDirty(e);};
+  body.querySelector('#nSum').addEventListener('input',upd);body.querySelector('#nTxt').addEventListener('input',upd);}
+$('pgmarks').addEventListener('click',ev=>{const m=ev.target.closest('.nmark');if(m){ev.preventDefault();openNote(+m.dataset.b);}});
+['pointerdown','mousedown'].forEach(n=>$('pgmarks').addEventListener(n,ev=>{if(ev.target.closest('.nmark'))ev.preventDefault();}));
+
+/* ---------- #5 move scenes / #7 outline ---------- */
+function sceneRanges(e){const r=[];e.blocks.forEach((b,i)=>{if(b.t==='scene'){if(r.length)r[r.length-1].end=i;r.push({start:i,end:e.blocks.length});}});return r;}
+function moveScene(k,dir){const e=ep();syncAll();const r=sceneRanges(e);const j=k+dir;if(j<0||j>=r.length)return false;
+  const a=r[Math.min(k,j)],b=r[Math.max(k,j)];const A=e.blocks.slice(a.start,a.end),B=e.blocks.slice(b.start,b.end);
+  e.blocks.splice(a.start,b.end-a.start,...B,...A);renderScript();markDirty(e);return true;}
+const OL=document.createElement('div');OL.className='outline';OL.hidden=true;document.body.appendChild(OL);
+function renderOutline(){const e=ep();const r=sceneRanges(e);
+  OL.innerHTML=`<div class="ol-head"><div><div class="ol-title">Πίνακας σκηνών</div><div class="ol-sub">${esc(e.title||'')} · ${r.length} σκηνές</div></div><button type="button" class="pill" id="olDone">Τέλος</button></div>
+  <div class="ol-list">${r.map((x,k)=>{const b=e.blocks[x.start];const lines=e.blocks.slice(x.start+1,x.end).filter(y=>y.t==='dialogue').length;
+    return `<div class="ocard" data-k="${k}"><div class="ohead"><span class="onum">${k+1}</span><input class="oh" value="${esc(b.x)}" placeholder="ΕΣΩΤ. ΤΟΠΟΘΕΣΙΑ - ΜΕΡΑ" autocapitalize="characters" autocomplete="off" aria-label="Επικεφαλίδα σκηνής ${k+1}">
+      <button type="button" class="omv" data-d="-1" aria-label="Πιο πάνω" ${k?'':'disabled'}>↑</button><button type="button" class="omv" data-d="1" aria-label="Πιο κάτω" ${k<r.length-1?'':'disabled'}>↓</button></div>
+      <textarea class="os" rows="2" placeholder="Σύνοψη: τι γίνεται σε αυτή τη σκηνή…">${esc(b.s||'')}</textarea>
+      <div class="ofoot"><span>${lines} ατάκ${lines===1?'α':'ες'}${b.n?' · σημείωση':''}</span><button type="button" class="pill ogo">Πήγαινε στη σκηνή</button></div></div>`;}).join('')}
+  <button type="button" class="add" id="olAdd">+ Νέα σκηνή στο τέλος</button></div>`;}
+function openOutline(){syncAll();closeDrawer();hideGhost();renderOutline();OL.hidden=false;OL.scrollTop=0;}
+function closeOutline(){OL.hidden=true;renderScript();}
+OL.addEventListener('click',ev=>{const e=ep();
+  if(ev.target.id==='olDone'){closeOutline();return;}
+  if(ev.target.id==='olAdd'){e.blocks.push({t:'scene',x:''});markDirty(e);renderOutline();const ins=OL.querySelectorAll('.oh');const last=ins[ins.length-1];if(last){last.focus();last.scrollIntoView({block:'center'});}return;}
+  const card=ev.target.closest('.ocard');if(!card)return;const k=+card.dataset.k;
+  const mv=ev.target.closest('.omv');if(mv){const y=card.getBoundingClientRect().top;if(moveScene(k,+mv.dataset.d)){renderOutline();const nc=OL.querySelector(`.ocard[data-k="${k+(+mv.dataset.d)}"]`);if(nc)OL.scrollTop+=nc.getBoundingClientRect().top-y;}return;}
+  if(ev.target.closest('.ogo')){const st=sceneRanges(e)[k].start;OL.hidden=true;renderScript();setTimeout(()=>flashBlock(st),60);}});
+OL.addEventListener('input',ev=>{const e=ep();const card=ev.target.closest('.ocard');if(!card)return;const b=e.blocks[sceneRanges(e)[+card.dataset.k].start];
+  if(ev.target.classList.contains('oh'))b.x=ev.target.value;else if(ev.target.classList.contains('os')){const v=ev.target.value.trim();if(v)b.s=ev.target.value;else delete b.s;}markDirty(e);});
+$('dOutline').addEventListener('click',openOutline);
+
+/* ---------- #6 search across the series ---------- */
+function runSearch(q){const box=$('searchRes');const nq=norm(q.trim());if(nq.length<2){box.hidden=true;box.innerHTML='';return;}syncAll();const res=[];
+  S.eps.forEach((e,ei)=>{let sn=0;e.blocks.forEach((b,bi)=>{if(b.t==='scene')sn++;const nx=norm(b.x);const at=nx.indexOf(nq);if(at<0||res.length>=60)return;
+    const a=Math.max(0,at-24),z=Math.min(b.x.length,at+nq.length+40);const snip=(a?'…':'')+esc(b.x.slice(a,at))+'<mark>'+esc(b.x.slice(at,at+nq.length))+'</mark>'+esc(b.x.slice(at+nq.length,z))+(z<b.x.length?'…':'');
+    res.push(`<button class="item sres" data-ep="${e.id}" data-b="${bi}"><span class="tx"><span class="where">${S.eps.length>1?esc(e.title||('Επεισόδιο '+(ei+1)))+' · ':''}${sn?'Σκηνή '+sn:'Αρχή'}</span><span class="snip">${snip}</span></span></button>`);});});
+  box.hidden=false;box.innerHTML=res.length?res.join(''):'<span class="help">Δεν βρέθηκε.</span>';}
+$('dSearch').addEventListener('input',e=>runSearch(e.target.value));
+$('searchRes').addEventListener('click',ev=>{const b=ev.target.closest('.sres');if(b)gotoBlock(b.dataset.ep,+b.dataset.b);});
+
+/* ---------- #8 character cards ---------- */
+function openCard(name){if(!S.chars)S.chars={};const c=S.chars[name]||{};
+  const body=openSheet(name,`<div class="dfield"><label class="lbl" for="cAge">Ηλικία</label><input id="cAge" value="${esc(c.age||'')}" autocomplete="off" placeholder="π.χ. 34">
+    <label class="lbl" for="cDesc">Ποιος είναι</label><textarea id="cDesc" rows="3" placeholder="Εμφάνιση, δουλειά, σχέσεις…">${esc(c.desc||'')}</textarea>
+    <label class="lbl" for="cNotes">Σημειώσεις</label><textarea id="cNotes" rows="6" placeholder="Παρελθόν, στόχοι, πώς μιλάει…">${esc(c.notes||'')}</textarea></div>`,()=>{if(drawer.classList.contains('open'))renderChars();});
+  const upd=()=>{const v={age:body.querySelector('#cAge').value.trim(),desc:body.querySelector('#cDesc').value,notes:body.querySelector('#cNotes').value};
+    if(v.age||v.desc.trim()||v.notes.trim())S.chars[name]=v;else delete S.chars[name];seriesDirty=true;markDirty(null);};
+  body.querySelectorAll('input,textarea').forEach(x=>x.addEventListener('input',upd));}
+$('charList').addEventListener('click',ev=>{const b=ev.target.closest('[data-card]');if(b){ev.stopImmediatePropagation();openCard(b.dataset.card);}},true);
+
+/* ---------- #3 ghost completion for names, places and times ---------- */
+const GH=document.createElement('span');GH.className='gfill';GH.hidden=true;$('scriptPage').appendChild(GH);let ghostFull=null,ghostEl=null;
+const SC_PRE=/^(ΕΣΩΤ\.?\/ΕΞΩΤ\.?|ΕΣΩΤ\.|ΕΞΩΤ\.|INT\.?\/EXT\.?|INT\.|EXT\.)\s+/;
+function splitHeading(x){const u=up(x);const m=u.match(SC_PRE);if(!m)return null;const rest=u.slice(m[0].length);const sep=rest.match(/\s+[-–]\s+|\.\s+/);return {pre:m[0],rest,loc:sep?rest.slice(0,sep.index):rest,time:sep?rest.slice(sep.index+sep[0].length):null};}
+function seriesCounts(){const pre=new Map(),loc=new Map(),time=new Map();S.eps.forEach(e=>e.blocks.forEach(b=>{if(b.t!=='scene')return;const h=splitHeading(b.x);if(!h)return;
+  const p=h.pre.trim();pre.set(p,(pre.get(p)||0)+1);if(h.loc.trim())loc.set(h.loc.trim(),(loc.get(h.loc.trim())||0)+1);if(h.time&&h.time.trim())time.set(h.time.trim(),(time.get(h.time.trim())||0)+1);}));return {pre,loc,time};}
+const best=(cands,q)=>{let b=null,bc=-1;for(const [k,c] of cands){if(k.length>q.length&&k.startsWith(q)&&c>bc){b=k;bc=c;}}return b;};
+function ghostFor(b,text){if(!text||/\s$/.test(text)&&b.t==='character')return null;const u=up(text);
+  if(b.t==='character'){if(/\(/.test(u))return null;const n=best([...knownChars().entries()],u.trim());return n?{full:n,rest:n.slice(u.trim().length)}:null;}
+  if(b.t!=='scene')return null;const counts=seriesCounts();const h=splitHeading(text);
+  if(!h){const pres=new Map([['ΕΣΩΤ.',1],['ΕΞΩΤ.',1],['ΕΣΩΤ./ΕΞΩΤ.',0]]);counts.pre.forEach((c,k)=>pres.set(k,(pres.get(k)||0)+c+1));const p=best([...pres.entries()],u);return p?{full:p+' ',rest:p.slice(u.length)}:null;}
+  if(h.time===null){const q=h.rest;if(!q.trim())return null;const l=best([...counts.loc.entries()],q);return l?{full:h.pre+l,rest:l.slice(q.length)}:null;}
+  const times=new Map([['ΜΕΡΑ',3],['ΝΥΧΤΑ',3],['ΠΡΩΙ',1],['ΒΡΑΔΥ',1],['ΣΟΥΡΟΥΠΟ',1],['ΣΥΝΕΧΕΙΑ',1],['ΑΡΓΟΤΕΡΑ',1]]);counts.time.forEach((c,k)=>times.set(k,(times.get(k)||0)+c+3));
+  const q=h.time;const t=best([...times.entries()],q);if(!t)return null;return {full:up(text)+t.slice(q.length),rest:t.slice(q.length)};}
+function hideGhost(){GH.hidden=true;ghostFull=null;ghostEl=null;}
+function updateGhost(){if(!editing||printView){hideGhost();return;}const s=getSelection();const el=cur();if(!el||!s.rangeCount||!s.getRangeAt(0).collapsed){hideGhost();return;}
+  const b=ep().blocks[idx(el)];if(!b||caret(el)!==el.textContent.length){hideGhost();return;}const g=ghostFor(b,el.textContent);if(!g||!g.rest){hideGhost();return;}
+  const r=document.createRange();const t=el.lastChild&&el.lastChild.nodeType===3?el.lastChild:null;if(!t){hideGhost();return;}r.setStart(t,t.length);r.collapse(true);
+  const rc=r.getBoundingClientRect(),pr=$('scriptPage').getBoundingClientRect();if(!rc.height){hideGhost();return;}const cs=getComputedStyle(el);
+  GH.textContent=g.rest;GH.style.font=cs.font;GH.style.letterSpacing=cs.letterSpacing;GH.style.lineHeight=rc.height+'px';GH.style.left=(rc.right-pr.left)+'px';GH.style.top=(rc.top-pr.top)+'px';
+  GH.hidden=false;ghostFull=g.full;ghostEl=el;}
+function ghostAccept(){if(GH.hidden||!ghostEl||!ghostEl.isConnected)return false;const el=ghostEl,full=ghostFull;el.textContent=full;fixEmpty(el);syncEl(el);place(el,full.length);markDirty(ep());hideGhost();setTimeout(updateGhost,0);return true;}
+['pointerdown','mousedown'].forEach(n=>GH.addEventListener(n,e=>e.preventDefault()));GH.addEventListener('click',ghostAccept);
+script.addEventListener('input',()=>requestAnimationFrame(updateGhost));
+document.addEventListener('selectionchange',()=>{if(!GH.hidden||editing)requestAnimationFrame(updateGhost);});
+script.addEventListener('focusout',()=>setTimeout(()=>{if(document.activeElement!==script)hideGhost();},120));
+
+/* ---------- #10 page colour: black / white / follow the iPhone ---------- */
+let paperMode='black';try{const v=localStorage.getItem('scr-paper');paperMode=v==='1'?'white':v==='auto'?'auto':'black';}catch(e){}
+const mqLight=matchMedia('(prefers-color-scheme: light)');
+function applyPaper(){const on=paperMode==='white'||(paperMode==='auto'&&mqLight.matches);document.body.classList.toggle('paperlight',on);document.documentElement.classList.toggle('paperlight',on);
+  $('paperSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===paperMode)));}
+function setPaperMode(m){paperMode=m;try{localStorage.setItem('scr-paper',m==='white'?'1':m==='auto'?'auto':'')}catch(e){}applyPaper();if(printView)renderPageView();}
+$('paperSeg').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(b)setPaperMode(b.dataset.v);});
+(mqLight.addEventListener?mqLight.addEventListener('change',applyPaper):mqLight.addListener(applyPaper));applyPaper();
+
+/* ---------- #11 text size while writing ---------- */
+const FS={s:.88,m:1,l:1.15,xl:1.3};let fsMode='m';try{fsMode=localStorage.getItem('proza-fs')||'m';if(!FS[fsMode])fsMode='m';}catch(e){}
+function applyFs(){script.style.fontSize='';const base=parseFloat(getComputedStyle(script).fontSize);if(fsMode!=='m')script.style.fontSize=(base*FS[fsMode]).toFixed(2)+'px';
+  $('fsSeg').querySelectorAll('button').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.v===fsMode)));paginate();updateGhost();}
+$('fsSeg').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(!b)return;fsMode=b.dataset.v;try{localStorage.setItem('proza-fs',fsMode)}catch(_){}applyFs();});
+addEventListener('resize',()=>{if(fsMode!=='m')applyFs();});applyFs();
+
+/* ---------- #12 reopen where you left off ---------- */
+let POS={};try{POS=JSON.parse(localStorage.getItem('proza-pos')||'{}')||{};}catch(e){}let posT=null;
+DESK.addEventListener('scroll',()=>{if(printView||!OL.hidden)return;clearTimeout(posT);posT=setTimeout(()=>{if(!ep())return;POS[S.cur]=Math.round(DESK.scrollTop);try{localStorage.setItem('proza-pos',JSON.stringify(POS))}catch(e){}},300);},{passive:true});
+function restorePos(){const y=POS[S.cur]||0;requestAnimationFrame(()=>requestAnimationFrame(()=>{DESK.scrollTop=y;}));}
+
 boot();
 })();
 </script>
