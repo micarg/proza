@@ -205,6 +205,10 @@ body.focus .toast{top:calc(env(safe-area-inset-top,0px) + 62px);bottom:auto}
 .qa{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .qbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;height:68px;border:.5px solid var(--line);border-radius:16px;background:var(--fill-2);color:var(--ink);font-size:12.5px;font-weight:600;box-shadow:var(--hi)}
 .qbtn:hover{background:var(--fill)}
+.qa{grid-template-columns:1fr 1.32fr 1fr!important}
+.qbtn{padding:0 3px;min-width:0}
+.qbtn span{font-size:12px;letter-spacing:-.01em;white-space:nowrap}
+@media (max-width:350px){.qbtn span{font-size:10px;letter-spacing:-.02em}}
 .qbtn[aria-checked=true]{background:var(--sel-bg);color:var(--sel-ink)}
 .dsec{display:flex;flex-direction:column;gap:6px}
 .dgrp{border-top:.5px solid var(--line);padding-top:4px}
